@@ -106,6 +106,8 @@ def on_message(client, userdata, msg):
         weight = data.get("w", 0)
 
         percent = min((raw / 65535.0) * 100, 100.0)
+        
+        print(percent, leak, weight)
 
         process_sensor_data(percent, leak, weight)
 
@@ -127,7 +129,7 @@ def process_sensor_data(percent, leak, weight):
     device.save(update_fields=["current_level", "last_seen", "current_weight"])
 
     TelemetryLog.objects.create(
-        device=device,  
+        device=device,
         level=percent,
         current_weight=weight
     )

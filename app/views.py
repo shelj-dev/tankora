@@ -110,6 +110,8 @@ def dashboard_data(request):
             gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
         except:
             gas_balance_percent = 0
+            
+        print(gas_balance_percent)
 
         device_data.append({
             'device_id': device.device_id,
@@ -117,7 +119,7 @@ def dashboard_data(request):
             'valve_status': device.valve_status,
             'prediction': prediction,
             'booking_threshold': device.booking_threshold,
-            'gas_balance': round(gas_balance_percent, 2), 
+            'gas_balance': abs(round(gas_balance_percent)), 
         })
         
     return JsonResponse({
