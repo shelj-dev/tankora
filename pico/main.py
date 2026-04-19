@@ -84,17 +84,17 @@ import json
 from umqtt import MQTTClient
 
 # ---------------- CONFIG ---------------- #
-WIFI_SSID = 'iot kids'
-WIFI_PASSWORD = 'bright kidoos'
+WIFI_SSID = 'FOXTECH'
+WIFI_PASSWORD = 'Foxtechajalad'
 
-MQTT_BROKER = '10.195.245.236'
+MQTT_BROKER = '192.168.1.61'
 MQTT_PORT = 1883
 MQTT_CLIENT_ID = 'pico_gas_monitor'
 
 PUB_TOPIC = 'tankora/gas_monitor'
 SUB_TOPIC = 'tankora/pico_gas_monitor/command'
 
-GAS_LEAK_THRESHOLD = 61000
+GAS_LEAK_THRESHOLD = 64000
 PUBLISH_INTERVAL = 2
 CHANGE_THRESHOLD = 500
 
@@ -270,7 +270,6 @@ def start():
         try:
             ensure_connections()
 
-            # 🔥 IMPORTANT: listen for commands
             if mqtt_client:
                 mqtt_client.check_msg()
 
@@ -280,7 +279,7 @@ def start():
             leak = value > GAS_LEAK_THRESHOLD
             
             if leak:
-                relay.value(0)  # force close
+                relay.value(0)
 
             handle_alert(leak)
 

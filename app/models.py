@@ -18,6 +18,8 @@ class GasDevice(models.Model):
     full_weight = models.IntegerField(null=True, blank=True)
     gross_weight = models.IntegerField(null=True, blank=True)
     current_weight = models.IntegerField(null=True, blank=True)
+    
+    prediction = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"Device {self.device_id} ({self.current_level}%)"

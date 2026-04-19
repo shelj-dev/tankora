@@ -1,8 +1,12 @@
 
 from pathlib import Path
+import environ
+
+env = environ.Env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+environ.Env.read_env(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -113,3 +117,12 @@ STATIC_URL = 'static/'
 # MQTT_PORT = 8000
 # MQTT_CLIENT_ID = 'pico_gas_monitor'
 # MQTT_TOPIC = 'tankora/gas_monitor'
+
+
+EMAIL_HOST=env("EMAIL_HOST")
+EMAIL_HOST_USER=env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD=env("EMAIL_HOST_PASSWORD")
+EMAIL_PORT=env("EMAIL_PORT")
+EMAIL_USE_TLS=env("EMAIL_USE_TLS")
+EMAIL_BACKEND=env("EMAIL_BACKEND")
+

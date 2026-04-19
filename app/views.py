@@ -2,6 +2,8 @@ import json
 import paho.mqtt.client as mqtt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.conf import settings
+
+from app.mqtt_client import mqtt_toggle_valve
 from .models import GasDevice, LeakageAlert
 from .services import predict_gas_last_days
 from django.http import JsonResponse
@@ -16,20 +18,23 @@ def dashboard(request):
     for device in devices:
         prediction = predict_gas_last_days(device)
 
-        try:
-            total_capacity = device.full_weight - device.gross_weight # 50 -15
-            remaining_gas = device.current_weight - device.gross_weight # 15 - 15
-
-            gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
-        except:
-            gas_balance_percent = 0
+        # try:
+        #     total_capacity = device.full_weight - device.gross_weight # 50 - 20
             
-        print(device.gross_weight)
-                    
+        #     if device.gross_weight < device.current_weight:
+        #         remaining_gas = "None"
+        #         gas_balance_percent = "None"
+        #     else:
+        #         remaining_gas = device.current_weight - device.gross_weight # 0 - 20
+        #         gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
+        #         # (-20 / 30) * 100
+        # except:
+        #     gas_balance_percent = 0
+
         device_data.append({
             'device': device,
             'prediction': prediction,
-            'gas_balance': round(gas_balance_percent, 2),
+            'gas_balance': (100),
         })
         
     context = {
@@ -46,22 +51,10 @@ def toggle_valve(request, device_id):
         # Determine new status
         new_status = 'OPEN' if device.valve_status == 'CLOSED' else 'CLOSED'
         
-        # Publish MQTT command to Pico 2W
         try:
-            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-            MQTT_BROKER = getattr(settings, 'MQTT_BROKER', 'test.mosquitto.org')
-            MQTT_PORT = getattr(settings, 'MQTT_PORT', 1883)
-            MQTT_COMMAND_TOPIC = getattr(settings, 'MQTT_COMMAND_TOPIC', 'tankora/{}/command')
             
-            client.connect(MQTT_BROKER, MQTT_PORT, 60)
-            command_payload = json.dumps({
-                "command": f"{new_status}_VALVE", 
-                "buzzer": "OFF"
-            })
-            client.publish(MQTT_COMMAND_TOPIC.format(device.device_id), command_payload)
-            client.disconnect()
+            mqtt_toggle_valve()
             
-            # Update DB Optimistically (or wait for telemetry to update it)
             device.valve_status = new_status
             device.save()
             
@@ -104,14 +97,21 @@ def dashboard_data(request):
         prediction = predict_gas_last_days(device)
 
         try:
-            total_capacity = device.full_weight - device.gross_weight
-            remaining_gas = device.current_weight - device.gross_weight
-
-            gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
+            total_capacity = device.full_weight - device.gross_weight # 50 - 20
+            
+            if device.gross_weight > device.current_weight:
+                remaining_gas = "None"
+                gas_balance_percent = "None"
+            else:
+                remaining_gas = device.current_weight - device.gross_weight # 0 - 20
+                gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
+                # (-20 / 30) * 100
         except:
             gas_balance_percent = 0
             
-        print(gas_balance_percent)
+        # print("Q", gas_balance_percent)
+        # print("gross_weight", device.gross_weight)
+        # print("current_weight", device.current_weight)
 
         device_data.append({
             'device_id': device.device_id,
@@ -119,7 +119,7 @@ def dashboard_data(request):
             'valve_status': device.valve_status,
             'prediction': prediction,
             'booking_threshold': device.booking_threshold,
-            'gas_balance': abs(round(gas_balance_percent)), 
+            'gas_balance': gas_balance_percent, 
         })
         
     return JsonResponse({

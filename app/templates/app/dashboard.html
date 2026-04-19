@@ -294,7 +294,7 @@ body {
          {% if item.gas_balance < 15 %}--primary:red;{% endif %}">
 
         <div class="inner-circle">
-            <p class="gas-percentage">{{ item.gas_balance|floatformat:1 }}%</p>
+            <p class="gas-percentage">{{ item.gas_balance }}%</p>
             <small>Gas Remaining</small>
         </div>
     </div>
@@ -321,7 +321,7 @@ body {
         <!-- MQ2 -->
         <div class="stat-box">
             {% comment %} <div class="mq2-level">{{ item.device.current_level }}</div> {% endcomment %}
-            <div class="mq2-level">{{ item.device.current_level|floatformat:2 }}</div>
+            <div class="mq2-level">{{ item.device.current_level|floatformat:2 }}%</div>
             <small>MQ2</small>
         </div>
 
@@ -357,7 +357,7 @@ function fetchDashboardData() {
             const circle = card.querySelector('.circle-wrap');
 
             if (gasEl) {
-                gasEl.innerText = device.gas_balance.toFixed(1) + '%';
+                gasEl.innerText = device.gas_balance + '%';
             }
 
             if (circle) {
@@ -371,7 +371,7 @@ function fetchDashboardData() {
 
             // ✅ MQ2
             const mq2 = card.querySelector('.mq2-level');
-            if (mq2) mq2.innerText = device.current_level.toFixed(1);
+            if (mq2) mq2.innerText = `${device.current_level.toFixed(1)}%`;
 
             // ✅ Valve
             const valve = card.querySelector('.valve-status');

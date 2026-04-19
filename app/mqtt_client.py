@@ -1,67 +1,3 @@
-# import paho.mqtt.client as mqtt
-# import json
-
-
-# MQTT_BROKER = "192.168.1.61"
-# MQTT_PORT = 1883
-# MQTT_TOPIC = "tankora/gas_monitor"
-
-
-# def on_connect(client, userdata, flags, rc):
-#     print("Connected to MQTT Broker:", rc)
-#     client.subscribe(MQTT_TOPIC)
-
-
-# def on_message(client, userdata, msg):
-#     try:
-#         payload = msg.payload.decode()
-#         data = json.loads(payload)
-
-#         print("Received:", data)
-
-#         gas_level_raw = data.get("gas_level", 0)
-#         leak = data.get("leak_detected", False)
-        
-#         # In dummy it's 1000 to 40000, but normally max is 65535.
-#         # Ensure it doesn't cross 100
-#         gas_level_percentage = min((gas_level_raw / 65535.0) * 100, 100.0)
-
-#         from app.models import GasDevice, LeakageAlert, TelemetryLog
-        
-#         device, created = GasDevice.objects.get_or_create(device_id="pico_gas_monitor")
-#         device.current_level = gas_level_percentage
-#         device.save()
-
-#         TelemetryLog.objects.create(device=device, level=gas_level_percentage)
-        
-#         if leak:
-#             LeakageAlert.objects.get_or_create(device=device, resolved=False, defaults={'severity': 'HIGH'})
-
-#         print(f"Gas: {gas_level_raw} ({gas_level_percentage:.1f}%), Leak: {leak}")
-
-#     except Exception as e:
-#         print("Error processing message:", e)
-
-
-# def start_mqtt():
-#     client = mqtt.Client()
-
-#     try:
-#         client.on_connect = on_connect
-#         client.on_message = on_message
-
-#         client.connect(MQTT_BROKER, MQTT_PORT, 60)
-#         client.loop_start()
-
-#         print("MQTT started")
-
-#     except Exception as e:
-#         print("MQTT connection failed:", e)
-        
-        
-        
-        
-
 import json
 import logging
 import threading
@@ -69,6 +5,9 @@ import paho.mqtt.client as mqtt
 from django.utils import timezone
 from django.db import close_old_connections
 import time
+
+from app.services import get_daily_gas_usage, predict_gas_last_days, send_email
+from app.models import GasDevice, TelemetryLog, LeakageAlert
 
 
 logger = logging.getLogger(__name__)
@@ -117,7 +56,6 @@ def on_message(client, userdata, msg):
 
 # ---------------- BUSINESS LOGIC ---------------- #
 def process_sensor_data(percent, leak, weight):
-    from app.models import GasDevice, TelemetryLog, LeakageAlert
 
     device, _ = GasDevice.objects.get_or_create(
         device_id="pico_gas_monitor"
@@ -126,7 +64,10 @@ def process_sensor_data(percent, leak, weight):
     device.current_level = percent
     device.current_weight = weight
     device.last_seen = timezone.now()
-    device.save(update_fields=["current_level", "last_seen", "current_weight"])
+
+    device.prediction = get_daily_gas_usage(device)
+    
+    device.save(update_fields=["current_level", "last_seen", "current_weight", "prediction"])
 
     TelemetryLog.objects.create(
         device=device,
@@ -141,6 +82,8 @@ def process_sensor_data(percent, leak, weight):
                 device=device,
                 severity="HIGH"
             )
+            if device.supplier_email:
+                send_email(device.supplier_email)
 
     logger.info(f"Data saved: {percent:.2f}% | Leak: {leak}")
 
@@ -179,3 +122,31 @@ def start_mqtt():
     thread.start()
 
     logger.info("MQTT background thread started")
+
+
+def mqtt_toggle_valve():
+    global client
+
+    if client is None:
+        print("MQTT not connected")
+        return
+
+    try:
+        device, _ = GasDevice.objects.get_or_create(
+            device_id="pico_gas_monitor"
+        )
+        command = f"{device.valve_status}_VALVE"
+
+        payload = json.dumps({
+            "command": command,
+            "buzzer": "OFF"
+        })
+
+        topic = f"tankora/{device.device_id}/command"
+
+        client.publish(topic, payload)
+
+        print(f"MQTT sent: {payload} → {topic}")
+
+    except Exception as e:
+        print("MQTT publish error:", e)

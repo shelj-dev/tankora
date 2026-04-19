@@ -45,3 +45,68 @@ def predict_gas_last_days(device: GasDevice) -> float:
         
     days_left = device.current_level / daily_consumption_rate_percent
     return round(days_left, 1)
+
+
+def get_daily_gas_usage(device: GasDevice) -> float:
+    now = timezone.now()
+    past = now - timedelta(days=2)
+
+    logs = TelemetryLog.objects.filter(
+        device=device,
+        timestamp__gte=past
+    ).order_by('timestamp')
+
+
+    if logs.count() < 2:
+        return 0.0
+
+
+    first_log = logs.first()
+    last_log = logs.last()
+
+    level_diff = first_log.level - last_log.level
+    print(level_diff)
+    time_diff_days = (last_log.timestamp - first_log.timestamp).total_seconds() / 86400.0
+
+    if level_diff <= 0 or time_diff_days <= 0:
+        return 0.0
+        
+    daily_usage = level_diff / time_diff_days
+    
+    return round(daily_usage, 2)
+
+
+
+
+
+
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+def send_email(to_email: str) -> bool:
+    try:
+        html_content = render_to_string("emails/alert.html", {
+            "project_name": "Gas Alert Notification",
+        })
+
+        msg = EmailMultiAlternatives(
+            subject="Your Verification Code",
+            body=f"Your OTP is:",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email],
+        )
+        msg.attach_alternative(html_content, "text/html")
+
+        result = msg.send()  # returns 1 on success
+
+        return result == 1  # return True or False
+
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+        return False
