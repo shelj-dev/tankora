@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
+
 class GasDevice(models.Model):
     device_id = models.CharField(max_length=50, unique=True, help_text="Unique Identifier for the Pico 2W")
     current_level = models.FloatField(default=0.0, help_text="Current gas level percentage (0-100)")
@@ -10,7 +11,10 @@ class GasDevice(models.Model):
     auto_booking_enabled = models.BooleanField(default=True)
     booking_threshold = models.FloatField(default=15.0, help_text="Percentage below which auto-booking triggers")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='devices', null=True, blank=True)
+
     supplier_email = models.EmailField(max_length=255, blank=True, null=True, help_text="Email of the LPG supply center")
+    alert_email = models.EmailField(max_length=255, blank=True, null=True, help_text="Email of the security center")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_seen = models.DateTimeField(null=True, blank=True)
@@ -20,6 +24,26 @@ class GasDevice(models.Model):
     current_weight = models.IntegerField(null=True, blank=True)
     
     prediction = models.IntegerField(null=True, blank=True)
+
+    last_rebook_sent = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        from app.services import send_rebook_email
+
+        trigger_rebook = False
+
+        # check condition BEFORE saving
+        if self.auto_booking_enabled and self.current_level <= self.booking_threshold:
+            # prevent repeated emails (cooldown logic)
+            if not self.last_rebook_sent or (timezone.now() - self.last_rebook_sent).seconds > 3600:
+                trigger_rebook = True
+
+        super().save(*args, **kwargs)
+
+        if trigger_rebook:
+            if send_rebook_email():
+                self.last_rebook_sent = timezone.now()
+                super().save(update_fields=["last_rebook_sent"])
 
     def __str__(self):
         return f"Device {self.device_id} ({self.current_level}%)"

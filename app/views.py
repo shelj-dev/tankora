@@ -5,7 +5,7 @@ from django.conf import settings
 
 from app.mqtt_client import mqtt_toggle_valve
 from .models import GasDevice, LeakageAlert
-from .services import predict_gas_last_days
+from .services import predict_gas_last_days, send_email, send_rebook_email
 from django.http import JsonResponse
 
 
@@ -126,3 +126,16 @@ def dashboard_data(request):
         'devices': device_data,
         'alerts': alert_msgs
     })
+
+
+
+
+
+def testing_email(request):
+    res = send_email()
+    return JsonResponse({"Message": res})
+
+
+def rebook(request):
+    send_rebook_email()
+    return redirect("dashboard")

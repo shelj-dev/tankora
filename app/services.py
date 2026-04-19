@@ -89,15 +89,73 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def send_email(to_email: str) -> bool:
+def send_email() -> bool:
+    to_email = "shelj73@gmail.com"
     try:
         html_content = render_to_string("emails/alert.html", {
             "project_name": "Gas Alert Notification",
         })
 
         msg = EmailMultiAlternatives(
-            subject="Your Verification Code",
-            body=f"Your OTP is:",
+            subject="LPG Testing",
+            body=f"",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email],
+        )
+        msg.attach_alternative(html_content, "text/html")
+
+        result = msg.send()  # returns 1 on success
+
+        return result == 1  # return True or False
+
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+        return False
+
+
+def send_alert_email() -> bool:
+    device, _ = GasDevice.objects.get_or_create(
+            device_id="pico_gas_monitor"
+        )
+
+    to_email = device.alert_email
+
+    try:
+        html_content = render_to_string("emails/alert.html", {
+            "project_name": "Gas Alert Notification",
+        })
+
+        msg = EmailMultiAlternatives(
+            subject="LPG Alert Email",
+            body=f"Emergency Gas Leakage detected",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email],
+        )
+        msg.attach_alternative(html_content, "text/html")
+
+        result = msg.send()  # returns 1 on success
+
+        return result == 1  # return True or False
+
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+        return False
+    
+
+def send_rebook_email() -> bool:
+    device, _ = GasDevice.objects.get_or_create(
+            device_id="pico_gas_monitor"
+        )
+
+    to_email = device.supplier_email
+    try:
+        html_content = render_to_string("emails/rebook.html", {
+            "project_name": "Gas Rebook Notification",
+        })
+
+        msg = EmailMultiAlternatives(
+            subject="LPG Rebboking request",
+            body=f"This is an automation system. Detected low gas level and requesting rebooking order.",
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[to_email],
         )

@@ -361,7 +361,7 @@ function fetchDashboardData() {
             }
 
             if (circle) {
-                circle.style.setProperty('--percentage', device.gas_balance.toFixed(0));
+                circle.style.setProperty('--percentage', device.gas_balance);
 
                 if (device.gas_balance < 15)
                     circle.style.setProperty('--primary', 'red');

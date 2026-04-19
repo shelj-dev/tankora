@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gas Alert</title>
+    <title>Gas Rebooking</title>
     <style>
         body {
             margin: 0;
@@ -20,7 +20,7 @@
             box-shadow: 0 0 25px rgba(0,0,0,0.4);
         }
         .header {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
+            background: linear-gradient(135deg, #f59e0b, #d97706);
             padding: 20px;
             text-align: center;
             color: #fff;
@@ -35,17 +35,17 @@
             color: #e2e8f0;
         }
         .content h2 {
-            color: #f87171;
+            color: #fbbf24;
             margin-top: 0;
         }
-        .alert-box {
-            background: rgba(239, 68, 68, 0.15);
-            border-left: 5px solid #ef4444;
+        .info-box {
+            background: rgba(245, 158, 11, 0.15);
+            border-left: 5px solid #f59e0b;
             padding: 15px;
             border-radius: 8px;
             margin: 20px 0;
         }
-        .info {
+        .details {
             margin-top: 20px;
             font-size: 14px;
             color: #94a3b8;
@@ -61,8 +61,8 @@
             display: inline-block;
             margin-top: 20px;
             padding: 12px 20px;
-            background: #ef4444;
-            color: #fff !important;
+            background: #f59e0b;
+            color: #000 !important;
             text-decoration: none;
             border-radius: 6px;
             font-weight: bold;
@@ -73,36 +73,36 @@
 
 <div class="container">
     <div class="header">
-        <h1>🚨 LPG Gas Leakage Detection System</h1>
+        <h1>🔁 {{ project_name }}</h1>
     </div>
 
     <div class="content">
-        <h2>Gas Leakage Detected!</h2>
+        <h2>Gas Level Low - Rebooking Requested</h2>
 
         <p>
-            An abnormal level of LPG gas has been detected by your monitoring system.
-            Immediate action is required to ensure safety.
+            The gas level in the monitored cylinder has dropped below the safe threshold.
+            An automatic rebooking request has been generated.
         </p>
 
-        <div class="alert-box">
-            ⚠️ <strong>Warning:</strong> Possible gas leakage detected. Avoid using electrical switches and ventilate the area immediately.
+        <div class="info-box">
+            📉 <strong>Status:</strong> Low gas level detected. Refill/replacement required soon.
         </div>
 
         <p>
-            Please check your gas system and surroundings immediately to prevent any hazards.
+            Please process the rebooking request at the earliest to ensure uninterrupted gas supply.
         </p>
 
-        <a href="#" class="btn">View Dashboard</a>
+        <a href="#" class="btn">Process Rebooking</a>
 
-        <div class="info">
+        <div class="details">
             <p><strong>Time:</strong> {{ now|default:"Just Now" }}</p>
-            <p><strong>Status:</strong> Critical</p>
+            <p><strong>Status:</strong> Pending Refill</p>
         </div>
     </div>
 
     <div class="footer">
-        <p>This is an automated alert from your Gas Monitoring System.</p>
-        <p>Do not reply to this email.</p>
+        <p>This is an automated message from your Gas Monitoring System.</p>
+        <p>Please do not reply to this email.</p>
     </div>
 </div>
 

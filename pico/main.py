@@ -230,6 +230,9 @@ def read_weight():
 def handle_alert(leak):
     if leak:
         buzzer.value(1)
+        relay.value(0)
+        print("Leak Detected - Valve Closed")
+
     else:
         buzzer.value(0)
 

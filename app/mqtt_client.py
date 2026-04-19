@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db import close_old_connections
 import time
 
-from app.services import get_daily_gas_usage, predict_gas_last_days, send_email
+from app.services import get_daily_gas_usage, predict_gas_last_days, send_alert_email, send_email
 from app.models import GasDevice, TelemetryLog, LeakageAlert
 
 
@@ -83,7 +83,7 @@ def process_sensor_data(percent, leak, weight):
                 severity="HIGH"
             )
             if device.supplier_email:
-                send_email(device.supplier_email)
+                send_alert_email()
 
     logger.info(f"Data saved: {percent:.2f}% | Leak: {leak}")
 
@@ -135,7 +135,11 @@ def mqtt_toggle_valve():
         device, _ = GasDevice.objects.get_or_create(
             device_id="pico_gas_monitor"
         )
-        command = f"{device.valve_status}_VALVE"
+
+        if device.valve_status == "CLOSED":
+            command = "OPEN_VALVE"
+        else:
+            command = "CLOSED_VALVE"
 
         payload = json.dumps({
             "command": command,

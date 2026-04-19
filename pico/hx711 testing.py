@@ -90,8 +90,8 @@ from hx711 import HX711
 hx = HX711(d_out=4, pd_sck=5)
 
 
-hx.set_scale(45000)
-#hx.set_scale(1)
+#hx.set_scale(45000)
+hx.set_scale(1)
 
 print("Stabilizing...")
 time.sleep(2)
