@@ -18,19 +18,6 @@ def dashboard(request):
     for device in devices:
         prediction = predict_gas_last_days(device)
 
-        # try:
-        #     total_capacity = device.full_weight - device.gross_weight # 50 - 20
-            
-        #     if device.gross_weight < device.current_weight:
-        #         remaining_gas = "None"
-        #         gas_balance_percent = "None"
-        #     else:
-        #         remaining_gas = device.current_weight - device.gross_weight # 0 - 20
-        #         gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
-        #         # (-20 / 30) * 100
-        # except:
-        #     gas_balance_percent = 0
-
         device_data.append({
             'device': device,
             'prediction': prediction,
@@ -42,6 +29,28 @@ def dashboard(request):
         'active_alerts': active_alerts,
     }
     return render(request, 'app/dashboard.html', context)
+
+
+def new_dashboard(request):
+    devices = GasDevice.objects.all()
+    device_data = []
+    
+    active_alerts = LeakageAlert.objects.filter(resolved=False).order_by('-timestamp')
+
+    for device in devices:
+        prediction = predict_gas_last_days(device)
+
+        device_data.append({
+            'device': device,
+            'prediction': prediction,
+            'gas_balance': (100),
+        })
+        
+    context = {
+        'device_data': device_data,
+        'active_alerts': active_alerts,
+    }
+    return render(request, 'app/new_dashboard.html', context)
 
 
 def toggle_valve(request, device_id):

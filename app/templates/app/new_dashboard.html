@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GasSense Pro — Smart LPG Monitoring System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ─── LOGIN ─────────────────────────────────────────── -->
+<div id="login-page">
+  <div class="login-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon">🔥</div>
+      <div>
+        <h2>GasSense Pro</h2>
+        <p>Smart LPG Monitoring System</p>
+      </div>
+    </div>
+    <h2 class="login-title">Welcome back</h2>
+    <p class="login-sub">Sign in to monitor your LPG system</p>
+    <div id="login-alert" class="alert-box">Invalid credentials. Use demo credentials below.</div>
+    <div class="login-form">
+      <label>Email Address</label>
+      <input type="email" id="email" placeholder="admin@gassense.in" value="admin@gassense.in" autocomplete="email"/>
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" value="gas1234" autocomplete="current-password"/>
+      <button class="btn btn-primary" onclick="doLogin()">🔐 Sign In</button>
+    </div>
+    <p class="login-demo">Use demo — <span onclick="fillDemo()">admin@gassense.in / gas1234</span></p>
+  </div>
+</div>
+
+<!-- ─── APP ─────────────────────────────────────────── -->
+<div id="app" class="hidden">
+  <!-- SIDEBAR OVERLAY -->
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-logo">
+      <div class="icon">🔥</div>
+      <div>
+        <h3>GasSense Pro</h3>
+        <p>Smart LPG Monitor</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Overview</div>
+      <div class="nav-item active" onclick="navTo('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
+      <div class="nav-item" onclick="navTo('live',this)"><span class="nav-icon">📡</span>Live Monitor<span class="live-badge" style="font-size:9px;padding:1px 5px;margin-left:auto">LIVE</span></div>
+      <div class="nav-section">Safety</div>
+      <div class="nav-item" onclick="navTo('alerts',this)"><span class="nav-icon">🚨</span>Alerts &amp; Alarms<span class="nav-badge" id="alert-count">3</span></div>
+      <div class="nav-item" onclick="navTo('valve',this)"><span class="nav-icon">🔧</span>Valve Control</div>
+      <div class="nav-item" onclick="navTo('cylinder',this)"><span class="nav-icon">🧯</span>Cylinder Health</div>
+      <div class="nav-section">Management</div>
+      <div class="nav-item" onclick="navTo('booking',this)"><span class="nav-icon">📦</span>Gas Booking</div>
+      <div class="nav-item" onclick="navTo('analytics',this)"><span class="nav-icon">📈</span>Analytics</div>
+      <div class="nav-item" onclick="navTo('history',this)"><span class="nav-icon">📋</span>History Log</div>
+      <div class="nav-item" onclick="navTo('supply',this)"><span class="nav-icon">🏪</span>Supply Centre</div>
+      <div class="nav-section">System</div>
+      <div class="nav-item" onclick="navTo('settings',this)"><span class="nav-icon">⚙️</span>Settings</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar">AK</div>
+        <div><p>Arjun Kumar</p><span>Administrator</span></div>
+        <button class="logout-btn" onclick="doLogout()" title="Logout">↩</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="topbar">
+      <div class="menu-btn" onclick="openSidebar()">☰</div>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions">
+        <div class="live-badge topbar-live">LIVE</div>
+        <div class="notif-btn" onclick="navTo('alerts',document.querySelector('.nav-item:nth-child(5)'))">🔔<div class="notif-dot"></div></div>
+        <button class="btn btn-primary simulate-btn" onclick="simulateLeak()">⚡ Simulate Leak</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- ── DASHBOARD ─────────────────────────── -->
+      <div id="page-dashboard" class="page active">
+        <div class="section-label">System Dashboard</div>
+        <p class="section-sub">Real-time overview of your LPG monitoring system</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="label">Gas Level</div>
+            <div class="value" style="color:var(--green)" id="stat-level">72%</div>
+            <div class="sub">≈ 14 days remaining</div>
+            <div class="icon-bg">⛽</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Leak Status</div>
+            <div class="value" id="stat-leak-val" style="color:var(--green);font-size:16px;padding-top:6px">SAFE</div>
+            <div class="sub" id="stat-leak-sub">0 PPM detected</div>
+            <div class="icon-bg">🛡️</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Valve Status</div>
+            <div class="value" id="stat-valve" style="color:var(--green);font-size:16px;padding-top:6px">OPEN</div>
+            <div class="sub">Auto-control enabled</div>
+            <div class="icon-bg">🔧</div>
+          </div>
+          <div class="stat-card alert-card">
+            <div class="label">Active Alerts</div>
+            <div class="value" id="stat-alerts" style="color:var(--red)">3</div>
+            <div class="sub">Last: 2h ago</div>
+            <div class="icon-bg">🚨</div>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="card card-glow">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <h3 style="font-size:15px">Gas Level Monitor</h3>
+              <div class="live-badge">LIVE</div>
+            </div>
+            <div class="gauge-wrap">
+              <div class="gauge">
+                <svg viewBox="0 0 200 110" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" style="stop-color:#ef4444"/>
+                      <stop offset="30%" style="stop-color:#eab308"/>
+                      <stop offset="70%" style="stop-color:#22c55e"/>
+                      <stop offset="100%" style="stop-color:#3b82f6"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#1e293b" stroke-width="16" stroke-linecap="round"/>
+                  <path id="gauge-fill" d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="url(#g1)" stroke-width="16" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="67.8"/>
+                  <line id="gauge-needle" x1="100" y1="100" x2="35" y2="38" stroke="#f97316" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="100" cy="100" r="6" fill="#f97316"/>
+                  <text x="14" y="112" font-size="9" fill="#64748b">E</text>
+                  <text x="95" y="22" font-size="9" fill="#64748b">50%</text>
+                  <text x="178" y="112" font-size="9" fill="#64748b">F</text>
+                </svg>
+                <div class="gauge-value" id="gauge-num">72%</div>
+              </div>
+              <div class="gas-status-row">
+                <span class="badge badge-green"><span class="dot dot-green"></span>Safe Level</span>
+                <span class="badge badge-orange">≈ 14 Days Left</span>
+                <span class="badge badge-blue">Auto-Booking ON</span>
+              </div>
+            </div>
+            <div style="margin-top:14px">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px">
+                <span>Critical</span><span>Low</span><span>Normal</span><span>Full</span>
+              </div>
+              <div style="height:8px;border-radius:6px;background:linear-gradient(90deg,#ef4444 0%,#eab308 20%,#22c55e 50%,#3b82f6 100%);position:relative">
+                <div id="level-indicator" style="position:absolute;top:-4px;width:16px;height:16px;background:#fff;border:3px solid var(--accent);border-radius:50%;transition:left 1s ease;left:70%"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px">
+                <span>0%</span><span>15%</span><span>50%</span><span>100%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:10px">Leak Detection</h3>
+            <div class="leak-indicator">
+              <div class="leak-ring safe" id="leak-ring">🛡️</div>
+              <div class="leak-ppm" id="leak-ppm">0 PPM</div>
+              <div class="leak-ppm-label">Gas Concentration</div>
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+                <span class="badge badge-green" id="leak-badge">✓ No Leak Detected</span>
+              </div>
+            </div>
+            <div class="valve-toggle">
+              <div>
+                <p style="font-size:13px;font-weight:500">Buzzer Alarm</p>
+                <p style="font-size:11px;color:var(--muted)">Sound alert on leak</p>
+              </div>
+              <div class="sound-wave off" id="buzzer-wave">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-grid2">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h3 style="font-size:14px">Recent Alerts</h3>
+              <span class="badge badge-red">3 New</span>
+            </div>
+            <div class="notif-panel">
+              <div class="notif-item"><div class="notif-icon red">🚨</div><div><div class="notif-title">High Leak Detected</div><div class="notif-desc">500 PPM – Auto valve closed</div></div><div class="notif-time">2h ago</div></div>
+              <div class="notif-item"><div class="notif-icon yellow">⚠️</div><div><div class="notif-title">Gas Level Below 20%</div><div class="notif-desc">Auto-booking initiated</div></div><div class="notif-time">1d ago</div></div>
+              <div class="notif-item"><div class="notif-icon blue">📦</div><div><div class="notif-title">Booking Confirmed</div><div class="notif-desc">Order #GS-2841 confirmed</div></div><div class="notif-time">2d ago</div></div>
+              <div class="notif-item"><div class="notif-icon green">✅</div><div><div class="notif-title">Valve Reopened</div><div class="notif-desc">Safe levels restored</div></div><div class="notif-time">2d ago</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:14px;margin-bottom:12px">Cylinder Condition</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                  <span style="color:var(--muted)">Days Left</span><span style="font-weight:600;color:var(--green)">~14 Days</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill green" style="width:72%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                  <span style="color:var(--muted)">Daily Usage</span><span style="font-weight:600">5.1% / day</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill orange" style="width:51%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                  <span style="color:var(--muted)">Pressure (kPa)</span><span style="font-weight:600;color:var(--blue)">420 kPa</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:62%;background:linear-gradient(90deg,#1d4ed8,#3b82f6)"></div></div>
+              </div>
+              <div style="background:var(--surface2);border-radius:10px;padding:10px;font-size:12px">
+                <div style="color:var(--muted);margin-bottom:5px">🔍 Leak Diagnosis</div>
+                <div style="color:var(--green)">✓ Regulator seal: Normal</div>
+                <div style="color:var(--green)">✓ Valve connection: Tight</div>
+                <div style="color:var(--yellow);margin-top:3px">⚠ Check burner seal</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:14px;margin-bottom:12px">Quick Actions</h3>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-danger" onclick="navTo('valve',document.querySelectorAll('.nav-item')[3])" style="justify-content:flex-start;font-size:12px">🔒 Emergency Close Valve</button>
+              <button class="btn btn-green" onclick="navTo('booking',document.querySelectorAll('.nav-item')[6])" style="justify-content:flex-start;font-size:12px">📦 Book New Cylinder</button>
+              <button class="btn btn-outline" onclick="navTo('supply',document.querySelectorAll('.nav-item')[9])" style="justify-content:flex-start;font-size:12px">📞 Alert Supply Centre</button>
+              <button class="btn btn-outline" onclick="navTo('cylinder',document.querySelectorAll('.nav-item')[4])" style="justify-content:flex-start;font-size:12px">🧯 Cylinder Diagnostics</button>
+              <button class="btn btn-outline" onclick="navTo('analytics',document.querySelectorAll('.nav-item')[7])" style="justify-content:flex-start;font-size:12px">📈 View Analytics</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LIVE MONITOR ───────────────────────── -->
+      <div id="page-live" class="page">
+        <div class="section-label">Live Monitor</div>
+        <p class="section-sub">Real-time sensor data streaming</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
+          <div class="card" style="text-align:center">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">MQ-2 (PPM)</div>
+            <div style="font-size:36px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green)" id="live-ppm">0</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">Normal: &lt;200</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Gas Level (%)</div>
+            <div style="font-size:36px;font-weight:800;font-family:'Syne',sans-serif;color:var(--accent)" id="live-level">72</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">Load cell sensor</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Pressure (kPa)</div>
+            <div style="font-size:36px;font-weight:800;font-family:'Syne',sans-serif;color:var(--blue)" id="live-pressure">420</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">Normal: 350–500</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="font-size:15px">Live PPM Waveform</h3>
+            <div class="live-badge">STREAMING</div>
+          </div>
+          <div class="chart-area">
+            <canvas id="live-canvas" width="600" height="170" style="width:100%;height:170px"></canvas>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card">
+            <h3 style="font-size:14px;margin-bottom:12px">Sensor Status</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px">MQ-2 Gas Sensor</span><span class="badge badge-green"><span class="dot dot-green"></span>Online</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px">Load Cell</span><span class="badge badge-green"><span class="dot dot-green"></span>Online</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px">Pressure Sensor</span><span class="badge badge-green"><span class="dot dot-green"></span>Online</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px">Solenoid Valve</span><span class="badge badge-green" id="valve-sensor-status"><span class="dot dot-green"></span>Open</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px">ESP32 Module</span><span class="badge badge-green"><span class="dot dot-green"></span>Connected</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="font-size:14px;margin-bottom:12px">Thresholds</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="background:var(--surface2);padding:10px;border-radius:8px">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px">LOW LEAK</div>
+                <div style="font-size:16px;font-weight:700;color:var(--yellow)">200 PPM</div>
+                <div style="font-size:10px;color:var(--muted)">App notification</div>
+              </div>
+              <div style="background:var(--surface2);padding:10px;border-radius:8px">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px">HIGH LEAK</div>
+                <div style="font-size:16px;font-weight:700;color:var(--red)">500 PPM</div>
+                <div style="font-size:10px;color:var(--muted)">Auto-close + alert</div>
+              </div>
+              <div style="background:var(--surface2);padding:10px;border-radius:8px">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:3px">AUTO-BOOKING</div>
+                <div style="font-size:16px;font-weight:700;color:var(--blue)">15%</div>
+                <div style="font-size:10px;color:var(--muted)">Booking triggered</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ALERTS ─────────────────────────────── -->
+      <div id="page-alerts" class="page">
+        <div class="section-label">Alerts &amp; Alarms</div>
+        <p class="section-sub">Manage notifications and alert history</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
+          <div class="card" style="text-align:center;border-color:rgba(239,68,68,.3)"><div style="font-size:26px;font-weight:800;color:var(--red);font-family:'Syne',sans-serif">3</div><div style="font-size:12px;color:var(--muted)">Active Alerts</div></div>
+          <div class="card" style="text-align:center;border-color:rgba(234,179,8,.3)"><div style="font-size:26px;font-weight:800;color:var(--yellow);font-family:'Syne',sans-serif">12</div><div style="font-size:12px;color:var(--muted)">This Month</div></div>
+          <div class="card" style="text-align:center;border-color:rgba(34,197,94,.3)"><div style="font-size:26px;font-weight:800;color:var(--green);font-family:'Syne',sans-serif">48</div><div style="font-size:12px;color:var(--muted)">Total Resolved</div></div>
+        </div>
+        <div class="card" style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:14px;align-items:center;flex-wrap:wrap;gap:8px">
+            <h3 style="font-size:15px">Active Alerts</h3>
+            <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="clearAlerts()">✓ Mark All Resolved</button>
+          </div>
+          <div id="alert-list">
+            <div class="alert-list-item" style="border-color:rgba(239,68,68,.4)">
+              <div class="ai" style="background:rgba(239,68,68,.15)">🚨</div>
+              <div class="alert-meta">
+                <h4>High Gas Leak Detected</h4>
+                <p>Sensor: 520 PPM — Exceeds 500 PPM. Supply centre notified. Valve auto-closed.</p>
+                <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap"><span class="badge badge-red">HIGH PRIORITY</span><span style="font-size:11px;color:var(--muted)">Today, 09:42 AM</span></div>
+              </div>
+              <div class="alert-actions">
+                <button class="btn btn-outline" style="font-size:11px;padding:5px 9px">Details</button>
+                <button class="btn btn-green" style="font-size:11px;padding:5px 9px" onclick="this.closest('.alert-list-item').remove()">Resolve</button>
+              </div>
+            </div>
+            <div class="alert-list-item" style="border-color:rgba(234,179,8,.4)">
+              <div class="ai" style="background:rgba(234,179,8,.15)">⚠️</div>
+              <div class="alert-meta">
+                <h4>Gas Level Low — Below 20%</h4>
+                <p>Current level: 18%. Auto-booking triggered. Expect delivery in 2–3 days.</p>
+                <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap"><span class="badge badge-yellow">MEDIUM</span><span style="font-size:11px;color:var(--muted)">Yesterday, 06:20 PM</span></div>
+              </div>
+              <div class="alert-actions">
+                <button class="btn btn-outline" style="font-size:11px;padding:5px 9px">Details</button>
+                <button class="btn btn-green" style="font-size:11px;padding:5px 9px" onclick="this.closest('.alert-list-item').remove()">Resolve</button>
+              </div>
+            </div>
+            <div class="alert-list-item" style="border-color:rgba(59,130,246,.4)">
+              <div class="ai" style="background:rgba(59,130,246,.15)">📡</div>
+              <div class="alert-meta">
+                <h4>Sensor Calibration Required</h4>
+                <p>MQ-2 sensor drift detected. Recalibration recommended.</p>
+                <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap"><span class="badge badge-blue">INFO</span><span style="font-size:11px;color:var(--muted)">2 days ago</span></div>
+              </div>
+              <div class="alert-actions">
+                <button class="btn btn-outline" style="font-size:11px;padding:5px 9px">Details</button>
+                <button class="btn btn-green" style="font-size:11px;padding:5px 9px" onclick="this.closest('.alert-list-item').remove()">Resolve</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px">Buzzer Alarm Control</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div style="background:var(--surface2);border-radius:12px;padding:16px;text-align:center">
+              <div class="buzzer-visual">
+                <div style="font-size:28px">🔔</div>
+                <div class="sound-wave off" id="buzzer-wave2"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px" id="buzzer-status-text">Buzzer: Standby</div>
+              <button class="btn btn-danger" onclick="testBuzzer()" style="width:100%;justify-content:center;font-size:12px">🔔 Test Buzzer</button>
+            </div>
+            <div style="background:var(--surface2);border-radius:12px;padding:16px">
+              <h4 style="font-size:13px;margin-bottom:10px">Buzzer Settings</h4>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">On Leak Detection</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">On Low Level (&lt;15%)</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">Night Mode Silent</span><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px">Auto-Silence 30s</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VALVE CONTROL ──────────────────────── -->
+      <div id="page-valve" class="page">
+        <div class="section-label">Valve Control</div>
+        <p class="section-sub">Manual and automatic gas valve management</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
+          <div class="card" style="text-align:center;padding:28px 20px">
+            <div style="font-size:64px;margin-bottom:14px" id="valve-emoji">🔓</div>
+            <h3 style="font-size:20px;margin-bottom:6px" id="valve-state-text">Valve OPEN</h3>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:18px" id="valve-desc">Gas is flowing normally. Safe to use.</p>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+              <button class="btn btn-danger" id="btn-close-valve" onclick="setValve(false)" style="font-size:13px;padding:12px 18px">🔒 Close Valve</button>
+              <button class="btn btn-green" id="btn-open-valve" onclick="setValve(true)" style="font-size:13px;padding:12px 18px;opacity:.4;pointer-events:none">🔓 Open Valve</button>
+            </div>
+            <p style="margin-top:12px;font-size:11px;color:var(--muted)">Last changed: Today 09:48 AM — Auto</p>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:12px">Auto-Close Settings</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="background:var(--surface2);padding:12px;border-radius:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><span style="font-size:12px;font-weight:500">Auto-close on leak</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                <p style="font-size:11px;color:var(--muted)">Closes when PPM &gt; threshold</p>
+              </div>
+              <div style="background:var(--surface2);padding:12px;border-radius:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><span style="font-size:12px;font-weight:500">Close on power outage</span><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                <p style="font-size:11px;color:var(--muted)">Fail-safe during power failure</p>
+              </div>
+              <div style="background:var(--surface2);padding:12px;border-radius:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><span style="font-size:12px;font-weight:500">Schedule close (Night)</span><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                <p style="font-size:11px;color:var(--muted)">Close 11 PM, open 6 AM</p>
+              </div>
+              <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);padding:12px;border-radius:10px">
+                <p style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:5px">🚨 Emergency Remote Close</p>
+                <p style="font-size:11px;color:var(--muted);margin-bottom:8px">Works via internet from anywhere</p>
+                <button class="btn btn-danger" onclick="setValve(false)" style="width:100%;justify-content:center;font-size:12px">🌐 Remote Emergency Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px">Valve Operation Log</h3>
+          <div class="table-scroll">
+            <table class="log-table">
+              <thead><tr><th>Time</th><th>Action</th><th>Triggered By</th><th>Reason</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Today 09:48</td><td>🔒 Closed</td><td>Auto-System</td><td>Leak (520 PPM)</td><td><span class="badge badge-red">Emergency</span></td></tr>
+                <tr><td>Today 09:52</td><td>🔓 Opened</td><td>Arjun Kumar</td><td>Manual override</td><td><span class="badge badge-green">Manual</span></td></tr>
+                <tr><td>Yesterday 11:00</td><td>🔒 Closed</td><td>Schedule</td><td>Night schedule</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
+                <tr><td>Yesterday 06:00</td><td>🔓 Opened</td><td>Schedule</td><td>Morning schedule</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CYLINDER HEALTH ────────────────────── -->
+      <div id="page-cylinder" class="page">
+        <div class="section-label">Cylinder Health</div>
+        <p class="section-sub">LPG cylinder diagnostics and condition analysis</p>
+        <div class="health-grid">
+          <div class="health-metric"><div class="label">Days Remaining</div><div class="value" style="color:var(--green)">~14 Days</div><div class="progress-bar"><div class="progress-fill green" style="width:72%"></div></div><div class="hint">Based on 5.1% avg daily usage</div></div>
+          <div class="health-metric"><div class="label">Current Weight</div><div class="value" style="color:var(--accent)">10.1 kg</div><div class="progress-bar"><div class="progress-fill orange" style="width:72%"></div></div><div class="hint">Full: 14.2 kg | Tare: 14.5 kg</div></div>
+          <div class="health-metric"><div class="label">Daily Consumption</div><div class="value">0.73 kg/day</div><div class="progress-bar"><div class="progress-fill" style="width:55%;background:linear-gradient(90deg,#7c3aed,#8b5cf6)"></div></div><div class="hint">Avg family: 0.5–1.2 kg/day</div></div>
+          <div class="health-metric"><div class="label">Last Refill</div><div class="value" style="font-size:16px;padding-top:6px">14 Jan 2025</div><div class="hint">18 days in use</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:12px">🔍 Leak Reason Analysis</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="background:var(--surface2);padding:11px;border-radius:10px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;font-weight:500">Burner Seal Wear</span><span class="badge badge-yellow">Medium Risk</span></div><div class="progress-bar"><div class="progress-fill yellow" style="width:45%"></div></div><p style="font-size:11px;color:var(--muted);margin-top:3px">Clean every 3 months</p></div>
+              <div style="background:var(--surface2);padding:11px;border-radius:10px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;font-weight:500">Regulator Condition</span><span class="badge badge-green">Good</span></div><div class="progress-bar"><div class="progress-fill green" style="width:85%"></div></div></div>
+              <div style="background:var(--surface2);padding:11px;border-radius:10px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;font-weight:500">Pipe Connection</span><span class="badge badge-green">Secure</span></div><div class="progress-bar"><div class="progress-fill green" style="width:92%"></div></div></div>
+              <div style="background:var(--surface2);padding:11px;border-radius:10px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;font-weight:500">Valve Condition</span><span class="badge badge-green">Normal</span></div><div class="progress-bar"><div class="progress-fill green" style="width:88%"></div></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:12px">📊 Usage (Last 14 Days)</h3>
+            <div class="chart-bars" style="height:140px;gap:4px">
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">5.2</div><div class="bar" style="height:52%"></div><div class="bar-label">1</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">4.8</div><div class="bar" style="height:48%"></div><div class="bar-label">2</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">6.1</div><div class="bar" style="height:61%"></div><div class="bar-label">3</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">5.5</div><div class="bar" style="height:55%"></div><div class="bar-label">4</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">4.2</div><div class="bar" style="height:42%"></div><div class="bar-label">5</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">5.9</div><div class="bar" style="height:59%"></div><div class="bar-label">6</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">7.1</div><div class="bar" style="height:71%;background:linear-gradient(to top,var(--red),rgba(239,68,68,.3))"></div><div class="bar-label">7</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">5.3</div><div class="bar" style="height:53%"></div><div class="bar-label">8</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">5.1</div><div class="bar" style="height:51%"></div><div class="bar-label">9</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">4.6</div><div class="bar" style="height:46%"></div><div class="bar-label">10</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">5.0</div><div class="bar" style="height:50%"></div><div class="bar-label">11</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">5.4</div><div class="bar" style="height:54%"></div><div class="bar-label">12</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">4.9</div><div class="bar" style="height:49%"></div><div class="bar-label">13</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:8px">5.1</div><div class="bar" style="height:51%"></div><div class="bar-label">14</div></div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:6px">Daily usage % (Day 7 spike: guests)</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px">🤖 AI Predictions</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div style="background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.03));border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:12px"><div style="font-size:18px;margin-bottom:6px">📅</div><h4 style="font-size:12px;margin-bottom:5px">Estimated Empty</h4><p style="font-size:15px;font-weight:700;color:var(--green)">Feb 1, 2025</p><p style="font-size:10px;color:var(--muted)">Current usage pattern</p></div>
+            <div style="background:linear-gradient(135deg,rgba(249,115,22,.08),rgba(249,115,22,.03));border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:12px"><div style="font-size:18px;margin-bottom:6px">⚡</div><h4 style="font-size:12px;margin-bottom:5px">Efficiency Score</h4><p style="font-size:15px;font-weight:700;color:var(--accent)">82 / 100</p><p style="font-size:10px;color:var(--muted)">Good performance</p></div>
+            <div style="background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(59,130,246,.03));border:1px solid rgba(59,130,246,.2);border-radius:12px;padding:12px"><div style="font-size:18px;margin-bottom:6px">🔧</div><h4 style="font-size:12px;margin-bottom:5px">Maintenance Due</h4><p style="font-size:15px;font-weight:700;color:var(--blue)">In 18 Days</p><p style="font-size:10px;color:var(--muted)">Burner seal cleaning</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BOOKING ─────────────────────────────── -->
+      <div id="page-booking" class="page">
+        <div class="section-label">Gas Booking</div>
+        <p class="section-sub">Auto and manual LPG cylinder booking</p>
+        <div class="booking-status">
+          <div style="font-size:40px">📦</div>
+          <div style="flex:1;min-width:180px">
+            <h3 style="font-size:16px;margin-bottom:5px">Current Booking Status</h3>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Order #GS-2841 — Auto-booked at 18%</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="badge badge-green">✓ Confirmed</span><span class="badge badge-blue">📍 Out for Delivery</span><span class="badge badge-orange">ETA: 1–2 Days</span></div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:12px;color:var(--muted)">Order ID</div>
+            <div style="font-size:16px;font-weight:700">#GS-2841</div>
+            <div style="font-size:11px;color:var(--muted)">Jan 17, 2025</div>
+          </div>
+        </div>
+        <div class="booking-steps">
+          <div class="step-card done"><div class="step-num done">✓</div><p style="font-size:11px;font-weight:600">Auto-Detected</p><p style="font-size:10px;color:var(--muted)">Level fell to 18%</p></div>
+          <div class="step-card done"><div class="step-num done">✓</div><p style="font-size:11px;font-weight:600">Booking Created</p><p style="font-size:10px;color:var(--muted)">Order placed</p></div>
+          <div class="step-card active-step"><div class="step-num active-s">3</div><p style="font-size:11px;font-weight:600">Out for Delivery</p><p style="font-size:10px;color:var(--muted)">In transit</p></div>
+          <div class="step-card"><div class="step-num pending">4</div><p style="font-size:11px;font-weight:600;color:var(--muted)">Delivered</p><p style="font-size:10px;color:var(--muted)">Pending</p></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:12px">🚀 Auto-Booking</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:11px;background:var(--surface2);border-radius:10px"><div><p style="font-size:12px;font-weight:500">Auto-Booking Enabled</p><p style="font-size:10px;color:var(--muted)">Book at threshold level</p></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div style="padding:11px;background:var(--surface2);border-radius:10px"><p style="font-size:11px;color:var(--muted);margin-bottom:6px">Trigger Level Threshold</p><div style="display:flex;align-items:center;gap:10px"><input type="range" min="5" max="30" value="15" style="flex:1" oninput="this.nextElementSibling.textContent=this.value+'%'"><span style="font-size:13px;font-weight:700;color:var(--accent);min-width:34px">15%</span></div></div>
+              <div style="padding:11px;background:var(--surface2);border-radius:10px"><p style="font-size:11px;color:var(--muted);margin-bottom:5px">Preferred Supplier</p><select style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px"><option>Indane Gas (HP)</option><option>Bharat Gas</option><option>LPG Direct</option></select></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:12px">📝 Manual Booking</h3>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Connection ID</label><input class="settings-input" style="width:100%;font-size:12px" value="KER-HP-2024-8841" readonly/></div>
+              <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Delivery Address</label><input class="settings-input" style="width:100%;font-size:12px" value="12, Anna Nagar, Nagercoil"/></div>
+              <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Contact Number</label><input class="settings-input" style="width:100%;font-size:12px" value="+91 98765 43210" type="tel"/></div>
+              <button class="btn btn-primary" style="justify-content:center;padding:11px;font-size:13px;margin-top:4px">📦 Place Manual Booking</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px">📚 Booking History</h3>
+          <div class="table-scroll">
+            <table class="log-table">
+              <thead><tr><th>Order ID</th><th>Date</th><th>Type</th><th>Supplier</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>#GS-2841</td><td>Jan 17, 2025</td><td>Auto</td><td>Indane Gas</td><td>₹899</td><td><span class="badge badge-blue">In Transit</span></td></tr>
+                <tr><td>#GS-2790</td><td>Dec 14, 2024</td><td>Auto</td><td>Indane Gas</td><td>₹899</td><td><span class="badge badge-green">Delivered</span></td></tr>
+                <tr><td>#GS-2741</td><td>Nov 20, 2024</td><td>Manual</td><td>Bharat Gas</td><td>₹921</td><td><span class="badge badge-green">Delivered</span></td></tr>
+                <tr><td>#GS-2698</td><td>Oct 28, 2024</td><td>Auto</td><td>Indane Gas</td><td>₹899</td><td><span class="badge badge-green">Delivered</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ANALYTICS ───────────────────────────── -->
+      <div id="page-analytics" class="page">
+        <div class="section-label">Analytics</div>
+        <p class="section-sub">Gas usage trends and consumption insights</p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
+          <div class="card" style="text-align:center"><div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif">₹5,394</div><div style="font-size:11px;color:var(--muted)">Annual Spend</div></div>
+          <div class="card" style="text-align:center"><div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif">6</div><div style="font-size:11px;color:var(--muted)">Cylinders (6 mo)</div></div>
+          <div class="card" style="text-align:center"><div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green)">0.73 kg</div><div style="font-size:11px;color:var(--muted)">Avg Daily Usage</div></div>
+          <div class="card" style="text-align:center"><div style="font-size:20px;font-weight:800;font-family:'Syne',sans-serif;color:var(--yellow)">23</div><div style="font-size:11px;color:var(--muted)">Avg Days/Cylinder</div></div>
+        </div>
+        <div class="card" style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <h3 style="font-size:15px">Monthly Gas Usage (%)</h3>
+            <div style="display:flex;gap:6px"><button class="btn btn-outline" style="font-size:11px;padding:4px 10px">6M</button><button class="btn btn-primary" style="font-size:11px;padding:4px 10px">1Y</button></div>
+          </div>
+          <div class="chart-bars">
+            <div class="bar-wrap"><div class="bar-val">78</div><div class="bar" style="height:78%"></div><div class="bar-label">Feb</div></div>
+            <div class="bar-wrap"><div class="bar-val">82</div><div class="bar" style="height:82%"></div><div class="bar-label">Mar</div></div>
+            <div class="bar-wrap"><div class="bar-val">70</div><div class="bar" style="height:70%"></div><div class="bar-label">Apr</div></div>
+            <div class="bar-wrap"><div class="bar-val">65</div><div class="bar" style="height:65%"></div><div class="bar-label">May</div></div>
+            <div class="bar-wrap"><div class="bar-val">60</div><div class="bar" style="height:60%"></div><div class="bar-label">Jun</div></div>
+            <div class="bar-wrap"><div class="bar-val">58</div><div class="bar" style="height:58%"></div><div class="bar-label">Jul</div></div>
+            <div class="bar-wrap"><div class="bar-val">62</div><div class="bar" style="height:62%"></div><div class="bar-label">Aug</div></div>
+            <div class="bar-wrap"><div class="bar-val">75</div><div class="bar" style="height:75%"></div><div class="bar-label">Sep</div></div>
+            <div class="bar-wrap"><div class="bar-val">88</div><div class="bar" style="height:88%;background:linear-gradient(to top,rgba(249,115,22,1),rgba(249,115,22,.4))"></div><div class="bar-label">Oct</div></div>
+            <div class="bar-wrap"><div class="bar-val">83</div><div class="bar" style="height:83%"></div><div class="bar-label">Nov</div></div>
+            <div class="bar-wrap"><div class="bar-val">95</div><div class="bar" style="height:95%;background:linear-gradient(to top,var(--red),rgba(239,68,68,.4))"></div><div class="bar-label">Dec</div></div>
+            <div class="bar-wrap"><div class="bar-val">72</div><div class="bar" style="height:72%"></div><div class="bar-label">Jan</div></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div class="card">
+            <h3 style="font-size:14px;margin-bottom:12px">Leak Events Per Month</h3>
+            <div class="chart-bars" style="height:120px">
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">0</div><div class="bar" style="height:0%;background:var(--green)"></div><div class="bar-label">Feb</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">1</div><div class="bar" style="height:16%;background:var(--yellow)"></div><div class="bar-label">Mar</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">0</div><div class="bar" style="height:0%"></div><div class="bar-label">Apr</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">2</div><div class="bar" style="height:33%;background:var(--yellow)"></div><div class="bar-label">May</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">0</div><div class="bar" style="height:0%"></div><div class="bar-label">Jun</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">1</div><div class="bar" style="height:16%;background:var(--yellow)"></div><div class="bar-label">Jul</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">0</div><div class="bar" style="height:0%"></div><div class="bar-label">Aug</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">3</div><div class="bar" style="height:50%;background:var(--red)"></div><div class="bar-label">Sep</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">1</div><div class="bar" style="height:16%;background:var(--yellow)"></div><div class="bar-label">Oct</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">0</div><div class="bar" style="height:0%"></div><div class="bar-label">Nov</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">2</div><div class="bar" style="height:33%;background:var(--yellow)"></div><div class="bar-label">Dec</div></div>
+              <div class="bar-wrap"><div class="bar-val" style="font-size:9px">1</div><div class="bar" style="height:16%;background:var(--yellow)"></div><div class="bar-label">Jan</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="font-size:14px;margin-bottom:12px">Cost Analysis</h3>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px;background:var(--surface2);border-radius:8px"><span style="font-size:13px">This Month</span><span style="font-size:14px;font-weight:700;color:var(--accent)">₹899</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px;background:var(--surface2);border-radius:8px"><span style="font-size:13px">Last Month</span><span style="font-size:14px;font-weight:700">₹899</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px;background:var(--surface2);border-radius:8px"><span style="font-size:13px">Last 3 Months</span><span style="font-size:14px;font-weight:700">₹2,697</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px;background:var(--surface2);border-radius:8px"><span style="font-size:13px">Annual Est.</span><span style="font-size:14px;font-weight:700;color:var(--blue)">₹10,788</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── HISTORY LOG ─────────────────────────── -->
+      <div id="page-history" class="page">
+        <div class="section-label">History Log</div>
+        <p class="section-sub">Complete event and activity history</p>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <h3 style="font-size:15px">All Events</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <select class="settings-input" style="width:auto;padding:5px 8px;font-size:12px"><option>All Events</option><option>Leaks Only</option><option>Valve Actions</option><option>Bookings</option></select>
+              <button class="btn btn-outline" style="font-size:12px;padding:5px 10px">⬇ Export CSV</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="log-table">
+              <thead><tr><th>Date &amp; Time</th><th>Event Type</th><th>Description</th><th>PPM</th><th>Level</th><th>Severity</th></tr></thead>
+              <tbody>
+                <tr><td>Jan 18, 09:42</td><td>🚨 Leak Alert</td><td>High leak — supply notified, valve closed</td><td style="color:var(--red)">520</td><td>72%</td><td><span class="badge badge-red">Critical</span></td></tr>
+                <tr><td>Jan 18, 09:48</td><td>🔒 Valve Closed</td><td>Auto-closed due to leak</td><td>520</td><td>72%</td><td><span class="badge badge-red">Auto</span></td></tr>
+                <tr><td>Jan 18, 09:52</td><td>🔓 Valve Opened</td><td>Manual override by administrator</td><td>0</td><td>72%</td><td><span class="badge badge-blue">Manual</span></td></tr>
+                <tr><td>Jan 17, 06:20</td><td>⚠️ Low Level</td><td>Gas below 20% — auto-booking triggered</td><td>0</td><td>18%</td><td><span class="badge badge-yellow">Warning</span></td></tr>
+                <tr><td>Jan 17, 06:21</td><td>📦 Booking</td><td>Auto-booking — Order #GS-2841</td><td>—</td><td>18%</td><td><span class="badge badge-blue">Auto</span></td></tr>
+                <tr><td>Jan 16, 11:00</td><td>🔒 Valve Closed</td><td>Scheduled night close</td><td>0</td><td>22%</td><td><span class="badge badge-blue">Schedule</span></td></tr>
+                <tr><td>Jan 15, 03:10</td><td>⚠️ Leak Warn</td><td>Low-level leak detected, app notified</td><td style="color:var(--yellow)">210</td><td>28%</td><td><span class="badge badge-yellow">Warning</span></td></tr>
+                <tr><td>Jan 14, 10:00</td><td>🧯 Refill</td><td>New cylinder installed — level reset 100%</td><td>0</td><td>100%</td><td><span class="badge badge-green">Info</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SUPPLY CENTRE ──────────────────────── -->
+      <div id="page-supply" class="page">
+        <div class="section-label">Supply Centre</div>
+        <p class="section-sub">LPG supply centre contact and alert management</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
+          <div class="card" style="border-color:rgba(249,115,22,.3)">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+              <div style="width:48px;height:48px;border-radius:12px;background:rgba(249,115,22,.15);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏪</div>
+              <div><h3 style="font-size:16px;margin-bottom:2px">Indane Gas Agency</h3><span class="badge badge-green"><span class="dot dot-green"></span>Connected</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:7px;font-size:12px">
+              <div style="display:flex;gap:8px"><span style="color:var(--muted);width:90px;flex-shrink:0">Address</span><span>15, Main Road, Nagercoil</span></div>
+              <div style="display:flex;gap:8px"><span style="color:var(--muted);width:90px;flex-shrink:0">Phone</span><span style="color:var(--blue)">04652-225566</span></div>
+              <div style="display:flex;gap:8px"><span style="color:var(--muted);width:90px;flex-shrink:0">Emergency</span><span style="color:var(--red)">1800-233-3555</span></div>
+              <div style="display:flex;gap:8px"><span style="color:var(--muted);width:90px;flex-shrink:0">Hours</span><span>Mon–Sat, 8AM–6PM</span></div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px">
+              <button class="btn btn-primary" style="flex:1;justify-content:center;font-size:12px">📞 Call Now</button>
+              <button class="btn btn-outline" style="flex:1;justify-content:center;font-size:12px">💬 Send SMS</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:12px">🚨 Auto-Alert Settings</h3>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><p style="font-size:12px;font-weight:600;color:var(--red)">Alert on High Leak (&gt;500 PPM)</p><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div><p style="font-size:10px;color:var(--muted)">SMS + auto-call sent to supply centre</p></div>
+              <div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.2);border-radius:10px;padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><p style="font-size:12px;font-weight:500">Alert on Persistent Leak</p><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div><p style="font-size:10px;color:var(--muted)">If leak persists &gt;5 minutes</p></div>
+              <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><p style="font-size:12px;font-weight:500">Auto-Booking Notification</p><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div><p style="font-size:10px;color:var(--muted)">Notify centre on auto-booking</p></div>
+            </div>
+            <button class="btn btn-danger" onclick="sendSupplyAlert()" style="width:100%;justify-content:center;margin-top:12px;font-size:12px">🚨 Send Manual Alert to Supply Centre</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px">Alert History to Supply Centre</h3>
+          <div class="table-scroll">
+            <table class="log-table">
+              <thead><tr><th>Date</th><th>Alert Type</th><th>PPM</th><th>Message</th><th>Response</th></tr></thead>
+              <tbody>
+                <tr><td>Jan 18, 09:42</td><td><span class="badge badge-red">High Leak</span></td><td style="color:var(--red)">520</td><td>SMS + Auto-call</td><td><span class="badge badge-green">Acknowledged</span></td></tr>
+                <tr><td>Dec 28, 03:15</td><td><span class="badge badge-yellow">Persistent Leak</span></td><td style="color:var(--yellow)">230</td><td>SMS</td><td><span class="badge badge-green">Resolved</span></td></tr>
+                <tr><td>Nov 12, 11:00</td><td><span class="badge badge-blue">Auto-Booking</span></td><td>—</td><td>System notification</td><td><span class="badge badge-green">Confirmed</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SETTINGS ────────────────────────────── -->
+      <div id="page-settings" class="page">
+        <div class="section-label">Settings</div>
+        <p class="section-sub">System configuration and preferences</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div>
+            <div class="card settings-section" style="margin-bottom:14px">
+              <h3>Leak Thresholds</h3>
+              <div class="settings-row"><div class="settings-label"><p>Low Leak Warning (PPM)</p><span>App notification threshold</span></div><input class="settings-input" type="number" value="200"/></div>
+              <div class="settings-row"><div class="settings-label"><p>High Leak Alert (PPM)</p><span>Auto-close + supply alert</span></div><input class="settings-input" type="number" value="500"/></div>
+              <div class="settings-row"><div class="settings-label"><p>Alarm Timeout (sec)</p><span>Auto silence buzzer after</span></div><input class="settings-input" type="number" value="30"/></div>
+            </div>
+            <div class="card settings-section">
+              <h3>Gas Level Settings</h3>
+              <div class="settings-row"><div class="settings-label"><p>Auto-Booking Level</p><span>Book when falls below</span></div><input class="settings-input" type="number" value="15"/></div>
+              <div class="settings-row"><div class="settings-label"><p>Low Level Warning</p><span>Show warning below</span></div><input class="settings-input" type="number" value="20"/></div>
+              <div class="settings-row"><div class="settings-label"><p>Full Cylinder (kg)</p><span>For level calculation</span></div><input class="settings-input" type="number" value="14.2"/></div>
+            </div>
+          </div>
+          <div>
+            <div class="card settings-section" style="margin-bottom:14px">
+              <h3>Notification Settings</h3>
+              <div class="settings-row"><div class="settings-label"><p>Push Notifications</p><span>App alerts for all events</span></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="settings-row"><div class="settings-label"><p>SMS Alerts</p><span>SMS to registered number</span></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="settings-row"><div class="settings-label"><p>Email Reports</p><span>Weekly summary email</span></div><label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+              <div class="settings-row"><div class="settings-label"><p>Supply Centre Alerts</p><span>Auto-alert on high leak</span></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="card settings-section">
+              <h3>Account &amp; Device</h3>
+              <div class="settings-row"><div class="settings-label"><p>Consumer Name</p><span>Registered name</span></div><input class="settings-input" value="Arjun Kumar"/></div>
+              <div class="settings-row"><div class="settings-label"><p>Phone Number</p><span>Alert SMS recipient</span></div><input class="settings-input" value="+91 98765 43210" type="tel"/></div>
+              <div class="settings-row"><div class="settings-label"><p>Device ID</p><span>ESP32 hardware ID</span></div><input class="settings-input" value="GS-ESP-7A4F" readonly/></div>
+              <div style="margin-top:12px;display:flex;gap:8px">
+                <button class="btn btn-primary" style="flex:1;justify-content:center;font-size:13px">💾 Save</button>
+                <button class="btn btn-outline" style="flex:1;justify-content:center;font-size:13px">↺ Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+
+  <!-- BOTTOM NAV (mobile) -->
+  <div id="bottom-nav">
+    <div class="bnav-items">
+      <div class="bnav-item active" onclick="navTo('dashboard',null);setBottomActive(this)">
+        <div class="bnav-icon">📊</div>
+        <div class="bnav-label">Dashboard</div>
+      </div>
+      <div class="bnav-item" onclick="navTo('live',null);setBottomActive(this)">
+        <div class="bnav-icon">📡</div>
+        <div class="bnav-label">Live</div>
+      </div>
+      <div class="bnav-item" onclick="navTo('alerts',null);setBottomActive(this)" style="position:relative">
+        <div class="bnav-badge" id="bnav-badge">3</div>
+        <div class="bnav-icon">🚨</div>
+        <div class="bnav-label">Alerts</div>
+      </div>
+      <div class="bnav-item" onclick="navTo('valve',null);setBottomActive(this)">
+        <div class="bnav-icon">🔧</div>
+        <div class="bnav-label">Valve</div>
+      </div>
+      <div class="bnav-item" onclick="openSidebar()">
+        <div class="bnav-icon">☰</div>
+        <div class="bnav-label">More</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- FLOATING ALERT -->
+<div id="float-alert">
+  <button class="close-alert" onclick="document.getElementById('float-alert').classList.remove('show')">✕</button>
+  <h4>🚨 GAS LEAK DETECTED!</h4>
+  <p id="float-msg">High PPM reading! Valve auto-closed. Supply centre notified.</p>
+</div>
+
+
+
+<script src="script.js"></script>
+
+</body>
+</html>

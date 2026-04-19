@@ -327,6 +327,8 @@ body {
 
     </div>
 
+    <a href="/admin"><button>Login</button></a>
+
     <form action="{% url 'toggle_valve' item.device.device_id %}" method="post">
         {% csrf_token %}
         <button type="submit" class="btn">
