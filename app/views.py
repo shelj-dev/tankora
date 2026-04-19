@@ -28,7 +28,8 @@ def dashboard(request):
         'device_data': device_data,
         'active_alerts': active_alerts,
     }
-    return render(request, 'app/dashboard.html', context)
+    # return render(request, 'app/dashboard.html', context)
+    return render(request, 'app/newest_dashboard.html', context)
 
 
 def new_dashboard(request):
@@ -114,6 +115,7 @@ def dashboard_data(request):
             else:
                 remaining_gas = device.current_weight - device.gross_weight # 0 - 20
                 gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
+                gas_balance_percent = round(gas_balance_percent)
                 # (-20 / 30) * 100
         except:
             gas_balance_percent = 0
