@@ -104,6 +104,9 @@ buzzer = machine.Pin(15, machine.Pin.OUT)
 relay = machine.Pin(14, machine.Pin.OUT)
 gas_sensor = machine.ADC(28)
 
+sound = machine.Pin(6, machine.Pin.OUT)
+sound.value(0)
+
 
 hx = HX711(d_out=4, pd_sck=5)
 hx.set_scale(45000)
@@ -166,6 +169,7 @@ def on_message(topic, msg):
         if buzzer_cmd == "ON":
             buzzer.value(1)
         elif buzzer_cmd == "OFF":
+            print("Command OFF")
             buzzer.value(0)
 
     except Exception as e:
@@ -227,14 +231,29 @@ def read_weight():
     return round((total / samples), 2)
 
 
+count = 0
+def on_buzzer_motor(on=False):
+    global count
+    if on:
+        count = 0
+        buzzer.value(1)
+
+    if count > 5:
+        count = 0
+        buzzer.value(0)
+    count += 1
+
+
 def handle_alert(leak):
     if leak:
-        buzzer.value(1)
         relay.value(0)
+        sound.value(1)
+        on_buzzer_motor(on=True)
         print("Leak Detected - Valve Closed")
 
     else:
-        buzzer.value(0)
+        sound.value(0)
+        # buzzer.value(0)
 
 
 # ---------------- MQTT SEND ---------------- #
@@ -271,6 +290,7 @@ def start():
 
     while True:
         try:
+            on_buzzer_motor()
             ensure_connections()
 
             if mqtt_client:

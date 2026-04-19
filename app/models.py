@@ -43,7 +43,8 @@ class GasDevice(models.Model):
         if trigger_rebook:
             if send_rebook_email():
                 self.last_rebook_sent = timezone.now()
-                super().save(update_fields=["last_rebook_sent"])
+                self.auto_booking_enabled = False
+                super().save(update_fields=["last_rebook_sent", "auto_booking_enabled"])
 
     def __str__(self):
         return f"Device {self.device_id} ({self.current_level}%)"
