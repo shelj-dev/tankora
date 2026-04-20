@@ -82,6 +82,8 @@ def process_sensor_data(percent, leak, weight):
                 device=device,
                 severity="HIGH"
             )
+            device.valve_status = "CLOSED"
+            device.save()
             if device.supplier_email:
                 send_alert_email()
 
