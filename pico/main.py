@@ -84,10 +84,10 @@ import json
 from umqtt import MQTTClient
 
 # ---------------- CONFIG ---------------- #
-WIFI_SSID = 'FOXTECH'
-WIFI_PASSWORD = 'Foxtechajalad'
+WIFI_SSID = 'sajeesh'
+WIFI_PASSWORD = '12345678'
 
-MQTT_BROKER = '192.168.1.61'
+MQTT_BROKER = '10.146.166.24'
 MQTT_PORT = 1883
 MQTT_CLIENT_ID = 'pico_gas_monitor'
 
@@ -109,7 +109,7 @@ sound.value(0)
 
 
 hx = HX711(d_out=4, pd_sck=5)
-hx.set_scale(45000)
+hx.set_scale(16480)
 
 print("Stabilizing...")
 time.sleep(2)
