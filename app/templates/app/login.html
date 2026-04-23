@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TANKORA | Secure Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-container">T</div>
+        <h1 class="brand-name">TANKORA</h1>
+        <p class="brand-subtitle">Industrial IoT Gas Monitoring System</p>
+
+        {% if error %}
+            <div class="error-msg">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="username">Access Identifier</label>
+                <input type="text" id="username" name="username" class="input-field" placeholder="Username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Security Key</label>
+                <input type="password" id="password" name="password" class="input-field" placeholder="••••••••" required>
+            </div>
+
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember">
+                    <span>Remember me</span>
+                </label>
+                <a href="#" class="forgot-link">Forgot key?</a>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                Authenticate System
+            </button>
+        </form>
+
+        <div class="footer-info">
+            System V2.5.4 | <a href="#">Security Policy</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.querySelector('form');
+        const btn = document.querySelector('.submit-btn');
+
+        form.addEventListener('submit', () => {
+            btn.disabled = true;
+            btn.innerText = 'Verifying Identity...';
+            btn.style.opacity = '0.7';
+        });
+    </script>
+</body>
+</html>

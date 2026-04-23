@@ -1,0 +1,74 @@
+:root {
+  --accent: #00e5ff;
+  --accent-dim: rgba(0, 229, 255, 0.2);
+  --card-border: rgba(255,255,255,0.1);
+  --success: #00ffcc;
+  --danger: #ff4d4d;
+}
+
+body {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  background: radial-gradient(circle at top right, #0f2027, #203a43, #2c5364);
+  color: white;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.brand {
+  font-size: 20px;
+  letter-spacing: 3px;
+}
+
+.nav-links a {
+  margin-left: 20px;
+  color: white;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.nav-links a:hover {
+  color: var(--accent);
+}
+
+/* Glass Card */
+.glass-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+}
+
+/* Buttons */
+.btn-cyan {
+  background: var(--accent);
+  color: black;
+  transition: 0.3s;
+}
+
+.btn-cyan:hover {
+  opacity: 0.8;
+}
+
+/* Error */
+.error-message {
+  color: var(--danger);
+  margin-top: 10px;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Layout */
+.container {
+  padding: 20px;
+}

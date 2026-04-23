@@ -10,4 +10,13 @@ urlpatterns = [
     path('api/dashboard-data/', views.dashboard_data, name='dashboard_data'),
     path('testing/', views.testing_email, name="testing"),
     path('rebook/', views.rebook, name="rebook"),
+
+     path('login/', views.custom_login, name='login'),
+     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+     
+     path('gas-devices/', views.gas_devices_list, name='gas_devices_list'),
+     path('gas-devices/edit/<int:device_id>/', views.gas_device_edit, name='gas_device_edit'),
+     
+     path('leakage-alerts/', views.leakage_alerts, name='leakage_alerts'),
+     path('telemetry-logs/', views.telemetry_logs, name='telemetry_logs'),
 ]

@@ -1,0 +1,73 @@
+{% extends 'app/base_admin.html' %}
+{% load static %}
+
+{% block title %}TANKORA | Refill Booking{% endblock %}
+{% block section_title %}Gas Refill Booking{% endblock %}
+{% block breadcrumb %}Management / Refill{% endblock %}
+
+{% block content %}
+<div class="metrics-grid" style="grid-template-columns: 1fr 400px;">
+    <div class="glass-card">
+        <div class="section-header">QUICK REORDER SYSTEM</div>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 30px;">
+            Select a device below to send an automated refill request to the supplier email configured for that device.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Select Device to Refill</label>
+                <select name="device_id" class="form-select" required style="max-width: 400px;">
+                    <option value="">-- Select a Device --</option>
+                    {% for device in devices %}
+                    <option value="{{ device.id }}">
+                        {{ device.device_id }} (Current Level: {{ device.current_level }}%)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-section" style="margin-top: 40px;">
+                <div class="section-header">BOOKING SUMMARY</div>
+                <div class="glass-card" style="background: #f8fafc; border: 1px dashed #cbd5e0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+                        <span style="color: var(--text-muted);">Request Type:</span>
+                        <strong>Standard LPG Refill</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+                        <span style="color: var(--text-muted);">Priority:</span>
+                        <strong style="color: var(--warning);">Normal</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                        <span style="color: var(--text-muted);">Notification:</span>
+                        <strong>Email to Supplier</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <button type="submit" class="btn-pro btn-save-full" style="width: 250px; background: var(--accent);">
+                    <i class="fas fa-paper-plane"></i> SEND REFILL REQUEST
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="glass-card status-info-card">
+        <div class="side-header">RECENT ACTIVITY</div>
+        <div class="status-meta">
+            {% for device in devices %}
+                {% if device.last_rebook_sent %}
+                <div class="meta-row" style="margin-bottom: 15px; flex-direction: column; gap: 4px;">
+                    <span style="font-weight: 700; color: var(--text-main);">{{ device.device_id }}</span>
+                    <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                        <span style="color: var(--success);">Request Sent</span>
+                        <span style="color: var(--text-muted);">{{ device.last_rebook_sent|date:"M d, H:i" }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

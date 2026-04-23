@@ -1,0 +1,61 @@
+{% extends 'app/base_admin.html' %}
+{% load static %}
+
+{% block title %}TANKORA | Leakage Alerts{% endblock %}
+{% block section_title %}Leakage History{% endblock %}
+{% block breadcrumb %}Monitoring / Alerts{% endblock %}
+
+{% block content %}
+<div class="glass-card table-management-card">
+    <div class="table-header-actions">
+        <h3 style="font-size: 14px; font-weight: 800; color: var(--text-muted);">ALL ALERTS</h3>
+    </div>
+
+    <div class="table-container">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Device</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alerts %}
+                <tr>
+                    <td>{{ alert.timestamp|date:"M d, Y H:i" }}</td>
+                    <td><strong>{{ alert.device.device_id }}</strong></td>
+                    <td>
+                        <span class="badge {% if alert.severity == 'HIGH' %}badge-danger{% else %}badge-warning{% endif %}">
+                            {{ alert.severity }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if alert.resolved %}
+                            <span class="badge badge-success">RESOLVED</span>
+                        {% else %}
+                            <span class="badge badge-danger">ACTIVE</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if not alert.resolved %}
+                        <button class="btn-pro btn-save" style="padding: 6px 12px; font-size: 10px;">MARK RESOLVED</button>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No leakage alerts recorded.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

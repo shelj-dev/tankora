@@ -126,7 +126,7 @@ def start_mqtt():
     logger.info("MQTT background thread started")
 
 
-def mqtt_toggle_valve():
+def mqtt_toggle_valve(target_status=None):
     global client
 
     if client is None:
@@ -134,21 +134,18 @@ def mqtt_toggle_valve():
         return
 
     try:
-        device, _ = GasDevice.objects.get_or_create(
-            device_id="pico_gas_monitor"
-        )
+        if target_status is None:
+            device, _ = GasDevice.objects.get_or_create(device_id="pico_gas_monitor")
+            target_status = "OPEN" if device.valve_status == "CLOSED" else "CLOSED"
 
-        if device.valve_status == "CLOSED":
-            command = "OPEN_VALVE"
-        else:
-            command = "CLOSED_VALVE"
+        command = "OPEN_VALVE" if target_status == "OPEN" else "CLOSED_VALVE"
 
         payload = json.dumps({
             "command": command,
             "buzzer": "OFF"
         })
 
-        topic = f"tankora/{device.device_id}/command"
+        topic = "tankora/pico_gas_monitor/command"
 
         client.publish(topic, payload)
 
