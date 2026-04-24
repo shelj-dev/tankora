@@ -35,8 +35,8 @@ class GasDevice(models.Model):
         # check condition BEFORE saving
         if self.auto_booking_enabled and self.current_level <= self.booking_threshold:
             # prevent repeated emails (cooldown logic)
-            if not self.last_rebook_sent or (timezone.now() - self.last_rebook_sent).seconds > 3600:
-                trigger_rebook = True
+            # if not self.last_rebook_sent or (timezone.now() - self.last_rebook_sent).seconds > 3600:
+            trigger_rebook = True
 
         super().save(*args, **kwargs)
 

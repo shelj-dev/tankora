@@ -1,5 +1,4 @@
 import json
-import paho.mqtt.client as mqtt
 from django.shortcuts import render, get_object_or_404, redirect
 from django.conf import settings
 
@@ -9,7 +8,8 @@ from .models import GasDevice, LeakageAlert, TelemetryLog
 from .services import predict_gas_last_days, send_email, send_rebook_email
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login
-from .mqtt_client import mqtt_toggle_valve
+from .mqtt_client import mqtt_send_value
+
 
 def dashboard(request):
     devices = GasDevice.objects.all()
@@ -34,26 +34,26 @@ def dashboard(request):
     return render(request, 'app/newest_dashboard.html', context)
 
 
-def new_dashboard(request):
-    devices = GasDevice.objects.all()
-    device_data = []
+# def new_dashboard(request):
+#     devices = GasDevice.objects.all()
+#     device_data = []
     
-    active_alerts = LeakageAlert.objects.filter(resolved=False).order_by('-timestamp')
+#     active_alerts = LeakageAlert.objects.filter(resolved=False).order_by('-timestamp')
 
-    for device in devices:
-        prediction = predict_gas_last_days(device)
+#     for device in devices:
+#         prediction = predict_gas_last_days(device)
 
-        device_data.append({
-            'device': device,
-            'prediction': prediction,
-            'gas_balance': (100),
-        })
+#         device_data.append({
+#             'device': device,
+#             'prediction': prediction,
+#             'gas_balance': (100),
+#         })
         
-    context = {
-        'device_data': device_data,
-        'active_alerts': active_alerts,
-    }
-    return render(request, 'app/new_dashboard.html', context)
+#     context = {
+#         'device_data': device_data,
+#         'active_alerts': active_alerts,
+#     }
+#     return render(request, 'app/new_dashboard.html', context)
 
 
 def toggle_valve(request, device_id):
@@ -71,7 +71,7 @@ def toggle_valve(request, device_id):
         
         try:
             # Pass the desired status to MQTT
-            mqtt_toggle_valve(new_status)
+            mqtt_send_value(new_status)
             
             device.valve_status = new_status
             device.save()
@@ -82,20 +82,20 @@ def toggle_valve(request, device_id):
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
 
-def update_sensor_data(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        device_id = data.get('device_id')
-        gas_level = data.get('gas_level')
-        leak_detected = data.get('leak_detected')
+# def update_sensor_data(request):
+#     if request.method == 'POST':
+#         data = json.loads(request.body)
+#         device_id = data.get('device_id')
+#         gas_level = data.get('gas_level')
+#         leak_detected = data.get('leak_detected')
         
-        device = GasDevice.objects.get(device_id=device_id)
-        device.gas_level = gas_level
-        device.leak_detected = leak_detected
-        device.save()
+#         device = GasDevice.objects.get(device_id=device_id)
+#         device.gas_level = gas_level
+#         device.leak_detected = leak_detected
+#         device.save()
         
-        return JsonResponse({'status': 'success'})
-    return JsonResponse({'status': 'error'})
+#         return JsonResponse({'status': 'success'})
+#     return JsonResponse({'status': 'error'})
 
 
 def dashboard_data(request):

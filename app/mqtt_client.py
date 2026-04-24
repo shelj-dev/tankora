@@ -48,7 +48,7 @@ def on_message(client, userdata, msg):
 
         percent = round(min((gas / 65535.0) * 100, 100.0))
         
-        print(percent, weight)
+        print("percent:", percent, "weight:", weight)
 
         process_sensor_data(percent, weight)
 
@@ -109,7 +109,7 @@ def mqtt_send_value():
         payload = json.dumps({
             "r": True,
             "b": True,
-            "s": 180
+            "s": "OPEN_VALVE"
         })
 
 

@@ -83,16 +83,20 @@ import gc
 import json
 from umqtt import MQTTClient
 
-# ---------------- CONFIG ---------------- #
-WIFI_SSID = 'sajeesh'
-WIFI_PASSWORD = '12345678'
+from machine import Pin, PWM
+import time
 
-MQTT_BROKER = '10.146.166.24'
+
+# ---------------- CONFIG ---------------- #
+WIFI_SSID = 'FOXTECH'
+WIFI_PASSWORD = 'Foxtechajalad'
+
+MQTT_BROKER = '192.168.1.65'
 MQTT_PORT = 1883
 MQTT_CLIENT_ID = 'pico_gas_monitor'
 
-PUB_TOPIC = 'tankora/gas_monitor'
-SUB_TOPIC = 'tankora/pico_gas_monitor/command'
+PUB_TOPIC = "tankora/gas_monitor/data"
+SUB_TOPIC = "tankora/gas_monitor/control"
 
 GAS_LEAK_THRESHOLD = 64000
 PUBLISH_INTERVAL = 2
@@ -100,13 +104,17 @@ CHANGE_THRESHOLD = 500
 
 
 # ---------------- HARDWARE ---------------- #
-buzzer = machine.Pin(15, machine.Pin.OUT)
-relay = machine.Pin(14, machine.Pin.OUT)
+buzzer = machine.Pin(6, machine.Pin.OUT)
+relay_exhaust = machine.Pin(15, machine.Pin.OUT)
 gas_sensor = machine.ADC(28)
 
-sound = machine.Pin(6, machine.Pin.OUT)
-sound.value(0)
+servo_valve = PWM(Pin(17))
+servo_valve.freq(20)
+buzzer.value(0)
 
+
+# Temp values
+count = 0
 
 hx = HX711(d_out=4, pd_sck=5)
 hx.set_scale(16480)
@@ -122,6 +130,8 @@ time.sleep(1)
 mqtt_client = None
 last_value = None
 last_publish_time = 0
+
+valve_state = False
 
 
 # ---------------- WIFI ---------------- #
@@ -153,24 +163,31 @@ def on_message(topic, msg):
     try:
         data = json.loads(msg)
 
-        command = data.get("command")
-        buzzer_cmd = data.get("buzzer")
+        relay_exhaust_mqtt = data.get("r")
+        buzzer_mqtt = data.get("b")
+        servo_valve_mqtt = data.get("s")
 
-        # 🔥 VALVE CONTROL FROM DJANGO
-        if command == "OPEN_VALVE":
-            relay.value(1)
-            print("Valve OPEN")
+        if servo_valve_mqtt == "OPEN_VALVE":
+            servo_valve_open()
+            print("Servo Valve OPEN")
 
-        elif command == "CLOSED_VALVE":
-            relay.value(0)
-            print("Valve CLOSED")
+        elif servo_valve_mqtt == "CLOSED_VALVE":
+            servo_valve_close()
+            print("Servo Valve CLOSED")
 
-        # 🔊 BUZZER CONTROL
-        if buzzer_cmd == "ON":
+        if buzzer_mqtt:
+            print("Buzzer ON")
             buzzer.value(1)
-        elif buzzer_cmd == "OFF":
-            print("Command OFF")
+        else:
+            print("Buzzer OFF")
             buzzer.value(0)
+            
+        if relay_exhaust_mqtt == "ON":
+            print("Relay Exhaust ON")
+            relay_exhaust.value(1)
+        elif relay_exhaust_mqtt == "OFF":
+            print("Relay Exhaust OFF")
+            relay_exhaust.value(0)
 
     except Exception as e:
         print("Command error:", e)
@@ -195,7 +212,6 @@ def connect_mqtt():
 
         mqtt_client = client
         print("MQTT Connected & Subscribed")
-
         return True
 
     except Exception as e:
@@ -217,6 +233,31 @@ def ensure_connections():
         connect_mqtt()
 
 
+
+servo_delay=500
+def servo_valve_open():
+    global valve_state
+    if not valve_state:
+        print("Servo Valve open")
+        servo_valve.duty_ns(500000)
+        time.sleep_ms(servo_delay)
+        servo_valve.duty_ns(1500000)
+        time.sleep_ms(servo_delay)
+        valve_state = True
+
+
+def servo_valve_close():
+    global valve_state
+    if valve_state:
+        print("Servo Valve closed")
+        servo_valve.duty_ns(2500000)
+        time.sleep_ms(servo_delay)
+        servo_valve.duty_ns(1500000)
+        time.sleep_ms(servo_delay)
+        valve_state = False
+   
+ 
+
 # ---------------- SENSOR ---------------- #
 def read_gas():
     return gas_sensor.read_u16()
@@ -231,33 +272,31 @@ def read_weight():
     return round((total / samples), 2)
 
 
-count = 0
-def on_buzzer_motor(on=False):
+def on_exhaust_motor(on=False):
     global count
     if on:
         count = 0
-        buzzer.value(1)
+        relay_exhaust.value(1)
 
     if count > 5:
         count = 0
-        buzzer.value(0)
+        relay_exhaust.value(0)
     count += 1
 
 
 def handle_alert(leak):
     if leak:
-        relay.value(0)
-        sound.value(1)
-        on_buzzer_motor(on=True)
+        buzzer.value(1)
+        servo_valve_open()
+        on_exhaust_motor(on=True)
         print("Leak Detected - Valve Closed")
 
     else:
-        sound.value(0)
-        # buzzer.value(0)
+        buzzer.value(0)
 
 
 # ---------------- MQTT SEND ---------------- #
-def publish_data(value, leak, weight):
+def publish_data(value, weight):
     global mqtt_client
 
     if mqtt_client is None:
@@ -266,7 +305,6 @@ def publish_data(value, leak, weight):
     try:
         payload = json.dumps({
             "g": value,
-            "l": int(leak),
             "w": weight
         })
 
@@ -285,12 +323,14 @@ def start():
 
     connect_wifi()
     connect_mqtt()
+    
+    servo_valve_close()
 
     print("System Started")
 
     while True:
         try:
-            on_buzzer_motor()
+            on_exhaust_motor()
             ensure_connections()
 
             if mqtt_client:
@@ -300,9 +340,6 @@ def start():
             weight = read_weight()
 
             leak = value > GAS_LEAK_THRESHOLD
-            
-            if leak:
-                relay.value(0)
 
             handle_alert(leak)
 
@@ -320,7 +357,7 @@ def start():
                 should_send = True
 
             if should_send:
-                publish_data(value, leak, weight)
+                publish_data(value, weight)
                 last_value = value
                 last_publish_time = current_time
 
