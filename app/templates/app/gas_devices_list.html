@@ -1,0 +1,64 @@
+{% extends 'app/base_admin.html' %}
+{% load static %}
+
+{% block title %}TANKORA | Gas Devices{% endblock %}
+{% block section_title %}Gas Devices{% endblock %}
+{% block breadcrumb %}Gas devices{% endblock %}
+
+{% block content %}
+<div class="glass-card table-management-card">
+    <div class="table-header-actions">
+        <div class="search-box">
+            <input type="text" placeholder="Search devices..." id="deviceSearch">
+            <button class="btn-pro btn-cyan">Search</button>
+        </div>
+        <div class="header-right-btns">
+            <a href="/admin/app/gasdevice/add/" class="btn-pro btn-save">
+                <i class="fas fa-plus-circle"></i> Add gas device
+            </a>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;"><input type="checkbox"></th>
+                    <th>Device id</th>
+                    <th>Current level</th>
+                    <th>Valve status</th>
+                    <th>User</th>
+                    <th>Auto booking enabled</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in devices %}
+                <tr onclick="window.location.href='{% url 'gas_device_edit' device.id %}'" style="cursor: pointer;">
+                    <td><input type="checkbox"></td>
+                    <td><a href="{% url 'gas_device_edit' device.id %}" class="device-link">{{ device.device_id }}</a></td>
+                    <td>{{ device.current_level|floatformat:1 }}</td>
+                    <td>{{ device.valve_status|capfirst }}</td>
+                    <td>{{ device.user.username|default:"-" }}</td>
+                    <td>
+                        {% if device.auto_booking_enabled %}
+                            <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                        {% else %}
+                            <i class="fas fa-times-circle" style="color: var(--danger);"></i>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No gas devices found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        {{ devices|length }} gas devices
+    </div>
+</div>
+{% endblock %}

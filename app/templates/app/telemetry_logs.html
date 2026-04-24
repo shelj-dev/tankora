@@ -1,0 +1,59 @@
+{% extends 'app/base_admin.html' %}
+{% load static %}
+
+{% block title %}TANKORA | Telemetry Logs{% endblock %}
+{% block section_title %}Telemetry History{% endblock %}
+{% block breadcrumb %}Monitoring / Logs{% endblock %}
+
+{% block content %}
+<div class="glass-card table-management-card">
+    <div class="table-header-actions">
+        <h3 style="font-size: 14px; font-weight: 800; color: var(--text-muted);">LIVE SENSOR DATA STREAM</h3>
+        <div class="connection-pill">
+            <div class="live-dot"></div>
+            <span>LOGGING ACTIVE</span>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Device</th>
+                    <th>Level (%)</th>
+                    <th>Weight (kg)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ log.timestamp|date:"M d, H:i:s" }}</td>
+                    <td><strong>{{ log.device.device_id }}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 40px; height: 8px; background: #eee; border-radius: 4px; overflow: hidden;">
+                                <div style="width: {{ log.level }}%; height: 100%; background: {% if log.level < 20 %}var(--danger){% elif log.level < 50 %}var(--warning){% else %}var(--accent){% endif %};"></div>
+                            </div>
+                            {{ log.level }}%
+                        </div>
+                    </td>
+                    <td>{{ log.current_weight|default:"-" }} kg</td>
+                    <td><span class="badge badge-success">OK</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No telemetry logs available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        Showing last 100 readings
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'app/base_admin.html' %}
+{% load static %}
+
+{% block title %}TANKORA | Edit Gas Device{% endblock %}
+{% block section_title %}Edit Gas Device{% endblock %}
+{% block breadcrumb %}Gas devices / {{ device.device_id }}{% endblock %}
+
+{% block content %}
+<form method="post" class="edit-device-form">
+    {% csrf_token %}
+    <div class="edit-layout">
+        <div class="edit-main-col">
+            <div class="glass-card form-section-card">
+                <div class="form-section">
+                    <div class="section-header">DEVICE IDENTIFICATION</div>
+                    <div class="form-group">
+                        <label>Device id *</label>
+                        {{ form.device_id }}
+                        <div class="help-text">Unique hardware identifier for the monitoring unit.</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header">OPERATIONAL METRICS</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Current Level (%) *</label>
+                            {{ form.current_level }}
+                        </div>
+                        <div class="form-group">
+                            <label>Valve Status *</label>
+                            {{ form.valve_status }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header">AUTOMATED BOOKING SETTINGS</div>
+                    <div class="form-group checkbox-group">
+                        {{ form.auto_booking_enabled }}
+                        <label for="{{ form.auto_booking_enabled.id_for_label }}">Enable Auto-Refill Booking</label>
+                    </div>
+                    <div class="form-group">
+                        <label>Threshold (%) *</label>
+                        {{ form.booking_threshold }}
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header">SECURITY & ALERTS</div>
+                    <div class="form-group">
+                        <label>Device Owner / User</label>
+                        {{ form.user }}
+                    </div>
+                    <div class="form-group">
+                        <label>Supplier Email</label>
+                        {{ form.supplier_email }}
+                    </div>
+                    <div class="form-group">
+                        <label>Emergency Alert Email</label>
+                        {{ form.alert_email }}
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header">WEIGHT ANALYTICS (KG)</div>
+                    <div class="form-row weights-row">
+                        <div class="form-group">
+                            <label>Full</label>
+                            {{ form.full_weight }}
+                        </div>
+                        <div class="form-group">
+                            <label>Gross</label>
+                            {{ form.gross_weight }}
+                        </div>
+                        <div class="form-group">
+                            <label>Current</label>
+                            {{ form.current_weight }}
+                        </div>
+                        <div class="form-group">
+                            <label>Prediction</label>
+                            {{ form.prediction }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="edit-side-col">
+            <div class="glass-card side-actions-card">
+                <div class="side-header">DEVICE ACTIONS</div>
+                <div class="side-btn-stack">
+                    <button type="submit" class="btn-pro btn-save-full">SAVE</button>
+                    <button type="submit" name="_addanother" class="btn-pro btn-save-add">SAVE & ADD NEW</button>
+                    <a href="/admin/app/gasdevice/{{ device.id }}/history/" class="btn-pro btn-history">HISTORY</a>
+                    <a href="/admin/app/gasdevice/{{ device.id }}/delete/" class="btn-pro btn-delete-full">DELETE DEVICE</a>
+                </div>
+            </div>
+
+            <div class="glass-card status-info-card">
+                <div class="side-header">STATUS INFO</div>
+                <div class="status-meta">
+                    <div class="meta-row">
+                        <span>Last Seen:</span>
+                        <strong>{{ device.last_seen|date:"H:i" }}</strong>
+                    </div>
+                    <div class="meta-row">
+                        <span>Sync:</span>
+                        <strong style="color: var(--success);">Perfect</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

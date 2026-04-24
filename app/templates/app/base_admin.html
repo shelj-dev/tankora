@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TANKORA | Admin{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">T</div>
+                <div class="brand-text">TANKORA</div>
+            </div>
+
+            <div class="sidebar-user">
+                <div class="avatar-sm">{{ request.user.username|slice:":2"|upper }}</div>
+                <div class="user-meta">
+                    <span class="name">{{ request.user.username|capfirst }}</span>
+                    <span class="status">System Admin</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-label">MONITORING</div>
+                <a href="{% url 'admin_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+                    <i class="fas fa-th-large"></i> <span>Live Dashboard</span>
+                </a>
+                <a href="{% url 'leakage_alerts' %}" class="sidebar-link {% if request.resolver_match.url_name == 'leakage_alerts' %}active{% endif %}">
+                    <i class="fas fa-exclamation-triangle"></i> <span>Leakage History</span>
+                </a>
+                <a href="{% url 'telemetry_logs' %}" class="sidebar-link {% if request.resolver_match.url_name == 'telemetry_logs' %}active{% endif %}">
+                    <i class="fas fa-history"></i> <span>Telemetry Logs</span>
+                </a>
+
+                <div class="nav-label">MANAGEMENT</div>
+                <a href="{% url 'gas_devices_list' %}" class="sidebar-link {% if 'gas_devices' in request.path %}active{% endif %}">
+                    <i class="fas fa-microchip"></i> <span>Gas Devices</span>
+                </a>
+                <a href="{% url 'rebook' %}" class="sidebar-link">
+                    <i class="fas fa-calendar-check"></i> <span>Refill Bookings</span>
+                </a>
+                
+                <div style="margin-top: 50px; padding: 0 10px;">
+                    <a href="/admin/logout/" class="sidebar-link" style="color: #ff3d71;">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2>{% block section_title %}Dashboard{% endblock %}</h2>
+                    <div class="breadcrumb">Home / {% block breadcrumb %}Dashboard{% endblock %}</div>
+                </div>
+                <div class="header-right" style="display: flex; gap: 15px;">
+                    <div class="connection-pill">
+                        <i class="fas fa-server"></i>
+                        <span>SERVER: <span style="color: var(--success);">ONLINE</span></span>
+                    </div>
+                    <div class="connection-pill">
+                        <div class="live-dot"></div>
+                        <span>LIVE TELEMETRY</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
