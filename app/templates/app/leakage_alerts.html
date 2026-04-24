@@ -41,7 +41,10 @@
                     </td>
                     <td>
                         {% if not alert.resolved %}
-                        <button class="btn-pro btn-save" style="padding: 6px 12px; font-size: 10px;">MARK RESOLVED</button>
+                        <form method="POST" action="{% url 'resolve_alert' alert.id %}" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-pro btn-save" style="padding: 6px 12px; font-size: 10px;">MARK RESOLVED</button>
+                        </form>
                         {% else %}
                         -
                         {% endif %}

@@ -20,5 +20,6 @@ urlpatterns = [
     path('gas-devices/edit/<int:device_id>/', views.gas_device_edit, name='gas_device_edit'),
     
     path('leakage-alerts/', views.leakage_alerts, name='leakage_alerts'),
+    path('leakage-alerts/resolve/<int:alert_id>/', views.resolve_alert, name='resolve_alert'),
     path('telemetry-logs/', views.telemetry_logs, name='telemetry_logs'),
 ]

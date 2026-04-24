@@ -94,7 +94,7 @@ def start_mqtt():
     logger.info("MQTT background thread started")
 
 
-def mqtt_send_value():
+def mqtt_send_value(new_status=None):
     global client
 
     if client is None:
@@ -105,11 +105,13 @@ def mqtt_send_value():
         device, _ = GasDevice.objects.get_or_create(
             device_id="pico_gas_monitor"
         )
+        
+        status_to_send = f"{new_status}_VALVE" if new_status else "OPEN_VALVE"
 
         payload = json.dumps({
             "r": True,
             "b": True,
-            "s": "OPEN_VALVE"
+            "s": status_to_send
         })
 
 
@@ -145,7 +147,7 @@ def process_sensor_data(percent, weight):
         current_weight=weight
     )
     
-    leak = True if percent < GAS_THRESHOLD_PERCENTAGE else False
+    leak = True if percent > GAS_THRESHOLD_PERCENTAGE else False
 
     # Prevent duplicate alerts
     if leak:

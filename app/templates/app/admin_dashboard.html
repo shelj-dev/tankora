@@ -168,6 +168,30 @@
                         valveText.style.color = device.valve_status === 'OPEN' ? 'var(--success)' : 'var(--danger)';
                         valveText.closest('.status-card-mini').querySelector('.status-indicator').style.background = device.valve_status === 'OPEN' ? 'var(--success)' : 'var(--danger)';
                     }
+                    
+                    // Update MQ-2 Status
+                    const mq2Text = document.getElementById('mq2StatusText');
+                    if (mq2Text) {
+                        mq2Text.innerText = device.leak_detected ? 'LEAK DETECTED' : 'NORMAL';
+                        mq2Text.style.color = device.leak_detected ? 'var(--danger)' : 'var(--success)';
+                        mq2Text.closest('.status-card-mini').querySelector('.status-indicator').style.background = device.leak_detected ? 'var(--danger)' : 'var(--success)';
+                    }
+
+                    // Update Load Cell Data
+                    const weightValue = document.getElementById('weightValue');
+                    if (weightValue) {
+                        weightValue.innerText = (device.current_weight !== null ? device.current_weight : '--') + ' KG';
+                    }
+
+                    // Update Last Alert
+                    const lastAlertText = document.getElementById('lastAlertText');
+                    if (lastAlertText) {
+                        if (data.alerts && data.alerts.length > 0) {
+                            lastAlertText.innerText = data.alerts[0].timestamp;
+                        } else {
+                            lastAlertText.innerText = 'None';
+                        }
+                    }
                 }
             });
     }

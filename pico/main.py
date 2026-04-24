@@ -109,7 +109,7 @@ relay_exhaust = machine.Pin(15, machine.Pin.OUT)
 gas_sensor = machine.ADC(28)
 
 servo_valve = PWM(Pin(17))
-servo_valve.freq(20)
+servo_valve.freq(50)
 buzzer.value(0)
 
 
@@ -287,7 +287,7 @@ def on_exhaust_motor(on=False):
 def handle_alert(leak):
     if leak:
         buzzer.value(1)
-        servo_valve_open()
+        servo_valve_close()
         on_exhaust_motor(on=True)
         print("Leak Detected - Valve Closed")
 
@@ -319,11 +319,12 @@ def publish_data(value, weight):
 
 # ---------------- MAIN LOOP ---------------- #
 def start():
-    global last_value, last_publish_time
+    global last_value, last_publish_time, mqtt_client, valve_state
 
     connect_wifi()
     connect_mqtt()
     
+    valve_state = True
     servo_valve_close()
 
     print("System Started")
@@ -368,6 +369,7 @@ def start():
 
         except Exception as e:
             print("Main loop error:", e)
+            mqtt_client = None
             time.sleep(2)
             gc.collect()
 

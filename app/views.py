@@ -20,10 +20,21 @@ def dashboard(request):
     for device in devices:
         prediction = predict_gas_last_days(device)
 
+        try:
+            total_capacity = device.full_weight - device.gross_weight
+            if device.gross_weight > device.current_weight:
+                gas_balance_percent = 0
+            else:
+                remaining_gas = device.current_weight - device.gross_weight
+                gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
+                gas_balance_percent = round(gas_balance_percent)
+        except:
+            gas_balance_percent = 0
+
         device_data.append({
             'device': device,
             'prediction': prediction,
-            'gas_balance': (100),
+            'gas_balance': gas_balance_percent,
         })
         
     context = {
@@ -132,13 +143,17 @@ def dashboard_data(request):
         # print("gross_weight", device.gross_weight)
         # print("current_weight", device.current_weight)
 
+        leak_detected = any(alert.device.device_id == device.device_id for alert in active_alerts)
+
         device_data.append({
             'device_id': device.device_id,
             'current_level': round(device.current_level, 1),
             'valve_status': device.valve_status,
             'prediction': prediction,
             'booking_threshold': device.booking_threshold,
-            'gas_balance': gas_balance_percent, 
+            'gas_balance': gas_balance_percent,
+            'current_weight': device.current_weight,
+            'leak_detected': leak_detected,
         })
         
     return JsonResponse({
@@ -243,6 +258,14 @@ def gas_device_edit(request, device_id):
 def leakage_alerts(request):
     alerts = LeakageAlert.objects.all().order_by('-timestamp')
     return render(request, "app/leakage_alerts.html", {'alerts': alerts})
+
+@login_required
+def resolve_alert(request, alert_id):
+    if request.method == "POST":
+        alert = get_object_or_404(LeakageAlert, id=alert_id)
+        alert.resolved = True
+        alert.save()
+    return redirect('leakage_alerts')
 
 @login_required
 def telemetry_logs(request):
