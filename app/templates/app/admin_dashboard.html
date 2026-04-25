@@ -1,0 +1,222 @@
+{% extends 'app/base_admin.html' %}
+{% load static %}
+
+{% block title %}TANKORA | Live Monitoring{% endblock %}
+{% block section_title %}Live Monitoring{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+{% if device_data %}
+    {% with first_device=device_data.0 %}
+    <div class="metrics-grid">
+        <!-- Center: Cylinder Visual Card -->
+        <div class="glass-card tank-visual-card">
+            <span class="label">Current Gas Level</span>
+            <div class="animated-tank">
+                <div class="cylinder-level" id="tankLevelFill" style="height: {{ first_device.gas_balance }}%; background-color: {% if first_device.gas_balance < 20 %}var(--danger){% elif first_device.gas_balance < 50 %}var(--warning){% else %}#0077be{% endif %};">
+                    <div class="water-wave"></div>
+                    <div class="water-wave"></div>
+                    <div class="bubbles-container">
+                        <div class="bubble" style="width:10px; height:10px; left:20%; animation-duration:4s; --drift:10px;"></div>
+                        <div class="bubble" style="width:6px; height:6px; left:40%; animation-duration:5s; --drift:-15px; animation-delay:1s;"></div>
+                        <div class="bubble" style="width:12px; height:12px; left:60%; animation-duration:6s; --drift:20px; animation-delay:2s;"></div>
+                        <div class="bubble" style="width:8px; height:8px; left:80%; animation-duration:4.5s; --drift:-10px; animation-delay:0.5s;"></div>
+                        <div class="bubble" style="width:5px; height:5px; left:50%; animation-duration:7s; --drift:5px; animation-delay:3s;"></div>
+                    </div>
+                    <div class="level-text" id="tankLevelText">{{ first_device.gas_balance }}%</div>
+                </div>
+            </div>
+
+            <div class="tank-status-label" id="gasStatusLabel" style="color: {% if first_device.gas_balance < 20 %}var(--danger){% elif first_device.gas_balance < 50 %}var(--warning){% else %}var(--success){% endif %};">
+                {% if first_device.gas_balance < 20 %}
+                    <i class="fas fa-exclamation-circle"></i> CRITICAL - LOW LEVEL
+                {% elif first_device.gas_balance < 50 %}
+                    <i class="fas fa-exclamation-triangle"></i> WARNING - MEDIUM LEVEL
+                {% else %}
+                    <i class="fas fa-check-circle"></i> ADEQUATE
+                {% endif %}
+            </div>
+
+            <!-- Simulation Control -->
+            {% comment %} <div class="sim-control">
+                <input type="range" class="sim-slider" id="simSlider" min="0" max="100" value="{{ first_device.gas_balance }}">
+                <p style="font-size: 10px; color: var(--text-muted); margin-top: 10px;">← Simulate level (demo)</p>
+            </div> {% endcomment %}
+        </div>
+
+        <!-- Right: Status Stack -->
+        <div class="status-stack">
+            <div class="glass-card status-card-mini">
+                <div class="info">
+                    <span class="label">Valve Status</span>
+                    <div class="val" id="valveStatusText" style="color: {% if first_device.device.valve_status == 'OPEN' %}var(--success){% else %}var(--danger){% endif %};">
+                        {{ first_device.device.valve_status }}
+                    </div>
+                </div>
+                <div class="status-indicator" style="background: {% if first_device.device.valve_status == 'OPEN' %}var(--success){% else %}var(--danger){% endif %};"></div>
+            </div>
+            
+            <div class="glass-card status-card-mini">
+                <div class="info">
+                    <span class="label">MQ-2 Sensor</span>
+                    <div class="val" id="mq2StatusText" style="color: {% if first_device.device.leak_detected %}var(--danger){% else %}var(--success){% endif %};">
+                        {% if first_device.device.leak_detected %}LEAK DETECTED{% else %}NORMAL{% endif %}
+                    </div>
+                </div>
+                <div class="status-indicator" style="background: {% if first_device.device.leak_detected %}var(--danger){% else %}var(--success){% endif %};"></div>
+            </div>
+
+            <div class="glass-card status-card-mini">
+                <div class="info">
+                    <span class="label">Load Cell</span>
+                    <div class="val" id="weightValue">{{ first_device.device.current_weight }} KG</div>
+                </div>
+                <div class="status-indicator" style="background: var(--accent);"></div>
+            </div>
+
+            <div class="glass-card status-card-mini">
+                <div class="info">
+                    <span class="label">Last Alert</span>
+                    <div class="val" id="lastAlertText" style="color: var(--warning);">
+                        {% if active_alerts %}
+                            {{ active_alerts.0.timestamp|date:"d/m/Y" }}
+                        {% else %}
+                            None
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="status-indicator" style="background: var(--warning);"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom: Valve Control Bar -->
+    <div class="glass-card valve-control-bar">
+        <div class="control-title">
+            Valve Control
+        </div>
+        <div class="btn-group">
+            <form action="{% url 'toggle_valve' first_device.device.device_id %}" method="post" id="valveForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" id="valveAction">
+                <button type="button" class="btn-pro btn-open" onclick="submitValve('OPEN')">
+                    Open Valve
+                </button>
+                <button type="button" class="btn-pro btn-close" onclick="submitValve('CLOSED')">
+                    Close Valve
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endwith %}
+{% else %}
+    <div class="glass-card" style="text-align: center; padding: 100px;">
+        <i class="fas fa-microchip" style="font-size: 48px; color: var(--text-muted); margin-bottom: 20px;"></i>
+        <h3>No devices detected</h3>
+        <p>Configure your IoT devices in the Django admin to see live telemetry.</p>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function submitValve(action) {
+        document.getElementById('valveAction').value = action;
+        document.getElementById('valveForm').submit();
+    }
+
+    // Live telemetry updates
+    function updateDashboard() {
+        fetch('/api/dashboard-data/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.devices && data.devices.length > 0) {
+                    const device = data.devices[0];
+                    
+                    // Update Tank
+                    const fill = document.getElementById('tankLevelFill');
+                    const text = document.getElementById('tankLevelText');
+                    const label = document.getElementById('gasStatusLabel');
+                    const slider = document.getElementById('simSlider');
+                    
+                    if (fill) {
+                        fill.style.height = device.gas_balance + '%';
+                        if (device.gas_balance < 20) fill.style.backgroundColor = 'var(--danger)';
+                        else if (device.gas_balance < 50) fill.style.backgroundColor = 'var(--warning)';
+                        else fill.style.backgroundColor = '#0077be';
+                    }
+                    if (text) text.innerText = device.gas_balance + '%';
+                    if (slider) slider.value = device.gas_balance;
+                    
+                    if (label) {
+                        if (device.gas_balance < 20) {
+                            label.innerHTML = '<i class="fas fa-exclamation-circle"></i> CRITICAL - LOW LEVEL';
+                            label.style.color = 'var(--danger)';
+                        } else if (device.gas_balance < 50) {
+                            label.innerHTML = '<i class="fas fa-exclamation-triangle"></i> WARNING - MEDIUM LEVEL';
+                            label.style.color = 'var(--warning)';
+                        } else {
+                            label.innerHTML = '<i class="fas fa-check-circle"></i> ADEQUATE';
+                            label.style.color = 'var(--success)';
+                        }
+                    }
+
+                    // Update Status Cards
+                    const valveText = document.getElementById('valveStatusText');
+                    if (valveText) {
+                        valveText.innerText = device.valve_status;
+                        valveText.style.color = device.valve_status === 'OPEN' ? 'var(--success)' : 'var(--danger)';
+                        valveText.closest('.status-card-mini').querySelector('.status-indicator').style.background = device.valve_status === 'OPEN' ? 'var(--success)' : 'var(--danger)';
+                    }
+                    
+                    // Update MQ-2 Status
+                    const mq2Text = document.getElementById('mq2StatusText');
+                    if (mq2Text) {
+                        mq2Text.innerText = device.leak_detected ? 'LEAK DETECTED' : 'NORMAL';
+                        mq2Text.style.color = device.leak_detected ? 'var(--danger)' : 'var(--success)';
+                        mq2Text.closest('.status-card-mini').querySelector('.status-indicator').style.background = device.leak_detected ? 'var(--danger)' : 'var(--success)';
+                    }
+
+                    // Update Load Cell Data
+                    const weightValue = document.getElementById('weightValue');
+                    if (weightValue) {
+                        weightValue.innerText = (device.current_weight !== null ? device.current_weight : '--') + ' KG';
+                    }
+
+                    // Update Last Alert
+                    const lastAlertText = document.getElementById('lastAlertText');
+                    if (lastAlertText) {
+                        if (data.alerts && data.alerts.length > 0) {
+                            lastAlertText.innerText = data.alerts[0].timestamp;
+                        } else {
+                            lastAlertText.innerText = 'None';
+                        }
+                    }
+                }
+            });
+    }
+
+    setInterval(updateDashboard, 4000);
+
+    // Simulation Slider UI effect
+    document.getElementById('simSlider')?.addEventListener('input', function(e) {
+        const val = e.target.value;
+        document.getElementById('tankLevelFill').style.height = val + '%';
+        document.getElementById('tankLevelText').innerText = val + '%';
+        const label = document.getElementById('gasStatusLabel');
+        if (val < 20) {
+            label.innerHTML = '<i class="fas fa-exclamation-circle"></i> CRITICAL - LOW LEVEL';
+            label.style.color = 'var(--danger)';
+            document.getElementById('tankLevelFill').style.backgroundColor = 'var(--danger)';
+        } else if (val < 50) {
+            label.innerHTML = '<i class="fas fa-exclamation-triangle"></i> WARNING - MEDIUM LEVEL';
+            label.style.color = 'var(--warning)';
+            document.getElementById('tankLevelFill').style.backgroundColor = 'var(--warning)';
+        } else {
+            label.innerHTML = '<i class="fas fa-check-circle"></i> ADEQUATE';
+            label.style.color = 'var(--success)';
+            document.getElementById('tankLevelFill').style.backgroundColor = '#0077be';
+        }
+    });
+</script>
+{% endblock %}
