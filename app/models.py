@@ -34,13 +34,25 @@ class GasDevice(models.Model):
 
         trigger_rebook = False
         
-        try:
-            percentage = (self.current_weight / self.gross_weight) * 100
-            print(percentage)
-        except:
-            percentage = 0
+        # try:
+        #     # percentage = (self.current_weight / self.gross_weight) * 100
+        #     percentage = (self.current_weight / (self.full_weight - self.gross_weight)) * 100
+        # except:
+        #     percentage = 0
 
-        if self.auto_booking_enabled and percentage <= self.booking_threshold and self.current_weight is not None:
+        try:
+            total_capacity = self.full_weight - self.gross_weight
+            if self.gross_weight > self.current_weight:
+                gas_balance_percent = 0
+            else:
+                remaining_gas = self.current_weight - self.gross_weight
+                gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
+                gas_balance_percent = round(gas_balance_percent)
+        except:
+            gas_balance_percent = 0
+
+        print("percentage:", gas_balance_percent)
+        if self.auto_booking_enabled and gas_balance_percent <= self.booking_threshold and self.current_weight is not None:
             trigger_rebook = True
 
         super().save(*args, **kwargs)
