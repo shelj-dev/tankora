@@ -84,8 +84,18 @@ def process_sensor_data(percent, leak, weight):
             )
             device.valve_status = "CLOSED"
             device.save()
-            if device.supplier_email:
+            
+            # Actually send the command to close the valve
+            mqtt_send_command(device.device_id, "CLOSED_VALVE")
+            
+            if device.alert_email:
                 send_alert_email()
+
+    # Reset auto-booking if refilled (e.g. level increases by 20%)
+    # This is a simple heuristic.
+    if percent > device.booking_threshold + 20 and not device.auto_booking_enabled:
+        device.auto_booking_enabled = True
+        device.save(update_fields=["auto_booking_enabled"])
 
     logger.info(f"Data saved: {percent:.2f}% | Leak: {leak}")
 
@@ -124,6 +134,23 @@ def start_mqtt():
     thread.start()
 
     logger.info("MQTT background thread started")
+
+
+def mqtt_send_command(device_id, command):
+    global client
+    if client is None:
+        return
+
+    try:
+        payload = json.dumps({
+            "command": command,
+            "buzzer": "OFF"
+        })
+        topic = f"tankora/{device_id}/command"
+        client.publish(topic, payload)
+        logger.info(f"MQTT command sent: {command} to {topic}")
+    except Exception as e:
+        logger.error(f"MQTT publish error: {e}")
 
 
 def mqtt_toggle_valve():

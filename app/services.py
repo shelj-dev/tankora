@@ -18,32 +18,15 @@ def check_auto_booking(device: GasDevice):
 
 def predict_gas_last_days(device: GasDevice) -> float:
     """
-    Calculates the rate of consumption over the last 7 days and extrapolates
-    how many days the remaining gas will last.
+    Calculates the estimated days left based on the gas percentage and average duration.
+    Formula: (Gas Percentage / 100) * Average Days
     """
-    now = timezone.now()
-    seven_days_ago = now - timedelta(days=2)
-    
-    logs = TelemetryLog.objects.filter(device=device, timestamp__gte=seven_days_ago).order_by('timestamp')
-    
-    if logs.count() < 2:
-        return -1.0 # Not enough data
+    if not device.average_duration_days:
+        average_days = 40
+    else:
+        average_days = device.average_duration_days
         
-    first_log = logs.first()
-    last_log = logs.last()
-    
-    level_diff = first_log.level - last_log.level
-    time_diff_days = (last_log.timestamp - first_log.timestamp).total_seconds() / 86400.0
-    
-    if level_diff <= 0 or time_diff_days <= 0:
-        return -1.0 # Gas level increased (refill) or no time passed
-        
-    daily_consumption_rate_percent = level_diff / time_diff_days
-    
-    if daily_consumption_rate_percent == 0:
-        return -1.0
-        
-    days_left = device.current_level / daily_consumption_rate_percent
+    days_left = (device.current_level / 100.0) * average_days
     return round(days_left, 1)
 
 
@@ -142,20 +125,26 @@ def send_alert_email() -> bool:
         return False
     
 
-def send_rebook_email() -> bool:
-    device, _ = GasDevice.objects.get_or_create(
-            device_id="pico_gas_monitor"
-        )
+def send_rebook_email(device: GasDevice = None) -> bool:
+    if device is None:
+        device, _ = GasDevice.objects.get_or_create(
+                device_id="pico_gas_monitor"
+            )
 
     to_email = device.supplier_email
+    if not to_email:
+        logger.warning(f"No supplier email set for device {device.device_id}")
+        return False
     try:
         html_content = render_to_string("emails/rebook.html", {
             "project_name": "Gas Rebook Notification",
+            "device_id": device.device_id,
+            "current_level": device.current_level,
         })
 
         msg = EmailMultiAlternatives(
-            subject="LPG Rebboking request",
-            body=f"This is an automation system. Detected low gas level and requesting rebooking order.",
+            subject="LPG Rebooking Request",
+            body=f"This is an automated system. Detected low gas level ({device.current_level}%) and requesting rebooking order for device {device.device_id}.",
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[to_email],
         )

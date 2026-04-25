@@ -24,6 +24,7 @@ class GasDevice(models.Model):
     current_weight = models.IntegerField(null=True, blank=True)
     
     prediction = models.IntegerField(null=True, blank=True)
+    average_duration_days = models.IntegerField(default=40, help_text="Average days a full tank lasts")
 
     last_rebook_sent = models.DateTimeField(null=True, blank=True)
 
@@ -34,14 +35,12 @@ class GasDevice(models.Model):
 
         # check condition BEFORE saving
         if self.auto_booking_enabled and self.current_level <= self.booking_threshold:
-            # prevent repeated emails (cooldown logic)
-            if not self.last_rebook_sent or (timezone.now() - self.last_rebook_sent).seconds > 3600:
-                trigger_rebook = True
+            trigger_rebook = True
 
         super().save(*args, **kwargs)
 
         if trigger_rebook:
-            if send_rebook_email():
+            if send_rebook_email(self):
                 self.last_rebook_sent = timezone.now()
                 self.auto_booking_enabled = False
                 super().save(update_fields=["last_rebook_sent", "auto_booking_enabled"])

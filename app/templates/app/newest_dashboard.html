@@ -319,8 +319,8 @@ button:hover {
 
         <div class="stats-row">
             <div class="stat-box">
-                <div>{{ item.prediction }}d</div>
-                <small>Left</small>
+                <div class="prediction-value">{{ item.prediction }}d</div>
+                <small>Est. Days Left</small>
             </div>
 
             <div class="stat-box">
@@ -385,11 +385,21 @@ function fetchDashboardData() {
             if (mq2) mq2.innerText = `${device.current_level.toFixed(1)}%`;
 
             const valve = card.querySelector('.valve-status');
-            if (valve) valve.innerText = device.valve_status;
+            if (valve) {
+                valve.innerText = device.valve_status;
+                // Update class for colors
+                valve.classList.remove('open', 'closed');
+                valve.classList.add(device.valve_status.toLowerCase());
+            }
 
             const btn = card.querySelector('.btn');
             if (btn) {
                 btn.innerText = device.valve_status === 'OPEN' ? 'Close Valve' : 'Open Valve';
+            }
+
+            const pred = card.querySelector('.prediction-value');
+            if (pred) {
+                pred.innerText = device.prediction + 'd';
             }
         });
 
