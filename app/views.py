@@ -7,8 +7,8 @@ from django.utils import timezone
 from .models import GasDevice, LeakageAlert, TelemetryLog
 from .services import predict_gas_last_days, send_email, send_rebook_email
 from django.http import JsonResponse
-from django.contrib.auth import authenticate, login
-from .mqtt_client import mqtt_send_value
+from django.contrib.auth import authenticate, login, logout
+from .mqtt_client import mqtt_send_command
 
 
 def dashboard(request):
@@ -82,7 +82,7 @@ def toggle_valve(request, device_id):
         
         try:
             # Pass the desired status to MQTT
-            mqtt_send_value(new_status)
+            mqtt_send_command(device.device_id, f"{new_status}_VALVE")
             
             device.valve_status = new_status
             device.save()
@@ -170,10 +170,9 @@ def testing_email(request):
     return JsonResponse({"Message": res})
 
 
-def rebook(request):
-    send_rebook_email()
-    return redirect("dashboard")
-
+def custom_logout(request):
+    logout(request)
+    return redirect('login')
 
 
 def custom_login(request):
@@ -279,7 +278,7 @@ def rebook(request):
         device_id = request.POST.get('device_id')
         device = get_object_or_404(GasDevice, id=device_id)
         from .services import send_rebook_email
-        if send_rebook_email():
+        if send_rebook_email(device):
             device.last_rebook_sent = timezone.now()
             device.save()
             # In a real app, you'd add a success message here

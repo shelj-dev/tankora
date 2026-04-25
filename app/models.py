@@ -30,20 +30,31 @@ class GasDevice(models.Model):
 
     def save(self, *args, **kwargs):
         from app.services import send_rebook_email
+        from django.utils import timezone
 
         trigger_rebook = False
+        
+        try:
+            percentage = (self.current_weight / self.gross_weight) * 100
+            print(percentage)
+        except:
+            percentage = 0
 
-        # check condition BEFORE saving
-        if self.auto_booking_enabled and self.current_level <= self.booking_threshold:
+        if self.auto_booking_enabled and percentage <= self.booking_threshold and self.current_weight is not None:
             trigger_rebook = True
 
         super().save(*args, **kwargs)
 
         if trigger_rebook:
-            if send_rebook_email(self):
+            print("Rebook trigger_rebook")
+            stat_rebook = send_rebook_email(self)
+            print(stat_rebook)
+            if stat_rebook:
+                print("Rebook send_rebook_email")
                 self.last_rebook_sent = timezone.now()
                 self.auto_booking_enabled = False
                 super().save(update_fields=["last_rebook_sent", "auto_booking_enabled"])
+                print("Rebook finished")
 
     def __str__(self):
         return f"Device {self.device_id} ({self.current_level}%)"

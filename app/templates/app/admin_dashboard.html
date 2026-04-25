@@ -87,6 +87,14 @@
                 </div>
                 <div class="status-indicator" style="background: var(--warning);"></div>
             </div>
+
+            <div class="glass-card status-card-mini">
+                <div class="info">
+                    <span class="label">Est. Days Left</span>
+                    <div class="val" id="predictionText">{{ first_device.prediction }} Days</div>
+                </div>
+                <div class="status-indicator" style="background: #0077be;"></div>
+            </div>
         </div>
     </div>
 
@@ -191,6 +199,12 @@
                         } else {
                             lastAlertText.innerText = 'None';
                         }
+                    }
+
+                    // Update Est Days Left
+                    const predictionText = document.getElementById('predictionText');
+                    if (predictionText) {
+                        predictionText.innerText = device.prediction + ' Days';
                     }
                 }
             });

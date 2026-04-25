@@ -13,7 +13,7 @@ urlpatterns = [
     path('rebook/', views.rebook, name="rebook"),
 
     path('login/', views.custom_login, name='login'),
-    path('logout/', views.custom_login, name='logout'),
+    path('logout/', views.custom_logout, name='logout'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     
     path('gas-devices/', views.gas_devices_list, name='gas_devices_list'),

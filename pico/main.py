@@ -91,7 +91,7 @@ import time
 WIFI_SSID = 'FOXTECH'
 WIFI_PASSWORD = 'Foxtechajalad'
 
-MQTT_BROKER = '192.168.1.65'
+MQTT_BROKER = '192.168.1.75'
 MQTT_PORT = 1883
 MQTT_CLIENT_ID = 'pico_gas_monitor'
 
@@ -296,7 +296,7 @@ def handle_alert(leak):
 
 
 # ---------------- MQTT SEND ---------------- #
-def publish_data(value, weight):
+def publish_data(value, weight, leak):
     global mqtt_client
 
     if mqtt_client is None:
@@ -305,7 +305,8 @@ def publish_data(value, weight):
     try:
         payload = json.dumps({
             "g": value,
-            "w": weight
+            "w": weight,
+            "l": leak
         })
 
         mqtt_client.publish(PUB_TOPIC, payload)
@@ -358,7 +359,7 @@ def start():
                 should_send = True
 
             if should_send:
-                publish_data(value, weight)
+                publish_data(value, weight, leak)
                 last_value = value
                 last_publish_time = current_time
 

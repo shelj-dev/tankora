@@ -18,15 +18,24 @@ def check_auto_booking(device: GasDevice):
 
 def predict_gas_last_days(device: GasDevice) -> float:
     """
-    Calculates the estimated days left based on the gas percentage and average duration.
-    Formula: (Gas Percentage / 100) * Average Days
+    Calculates the estimated days left based on the weight percentage and average duration.
     """
     if not device.average_duration_days:
         average_days = 40
     else:
         average_days = device.average_duration_days
         
-    days_left = (device.current_level / 100.0) * average_days
+    try:
+        total_capacity = device.full_weight - device.gross_weight
+        if device.gross_weight > device.current_weight:
+            gas_balance_percent = 0
+        else:
+            remaining_gas = device.current_weight - device.gross_weight
+            gas_balance_percent = (remaining_gas / total_capacity) * 100 if total_capacity > 0 else 0
+    except:
+        gas_balance_percent = 0
+        
+    days_left = (gas_balance_percent / 100.0) * average_days
     return round(days_left, 1)
 
 
@@ -73,6 +82,7 @@ logger = logging.getLogger(__name__)
 
 
 def send_email() -> bool:
+    print("mail sending")
     to_email = "shelj73@gmail.com"
     try:
         html_content = render_to_string("emails/alert.html", {
@@ -97,6 +107,8 @@ def send_email() -> bool:
 
 
 def send_alert_email() -> bool:
+    print("alert mail sending")
+
     device, _ = GasDevice.objects.get_or_create(
             device_id="pico_gas_monitor"
         )

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 MQTT_BROKER = "127.0.0.1"
 MQTT_PORT = 1883
-MQTT_TOPIC = "tankora/gas_monitor"
+MQTT_TOPIC = "tankora/gas_monitor/data"
 
 client = None
 mqtt_thread_started = False
@@ -93,9 +93,9 @@ def process_sensor_data(percent, leak, weight):
 
     # Reset auto-booking if refilled (e.g. level increases by 20%)
     # This is a simple heuristic.
-    if percent > device.booking_threshold + 20 and not device.auto_booking_enabled:
-        device.auto_booking_enabled = True
-        device.save(update_fields=["auto_booking_enabled"])
+    # if percent > device.booking_threshold + 20 and not device.auto_booking_enabled:
+    #     device.auto_booking_enabled = True
+    #     device.save(update_fields=["auto_booking_enabled"])
 
     logger.info(f"Data saved: {percent:.2f}% | Leak: {leak}")
 
@@ -143,10 +143,11 @@ def mqtt_send_command(device_id, command):
 
     try:
         payload = json.dumps({
-            "command": command,
-            "buzzer": "OFF"
+            "s": command,
+            "b": False,
+            "r": "OFF"
         })
-        topic = f"tankora/{device_id}/command"
+        topic = f"tankora/gas_monitor/control"
         client.publish(topic, payload)
         logger.info(f"MQTT command sent: {command} to {topic}")
     except Exception as e:
@@ -171,11 +172,12 @@ def mqtt_toggle_valve():
             command = "CLOSED_VALVE"
 
         payload = json.dumps({
-            "command": command,
-            "buzzer": "OFF"
+            "s": command,
+            "b": False,
+            "r": "OFF"
         })
 
-        topic = f"tankora/{device.device_id}/command"
+        topic = f"tankora/gas_monitor/control"
 
         client.publish(topic, payload)
 

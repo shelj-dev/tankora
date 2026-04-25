@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,33 +12,39 @@
             background-color: #0f172a;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .container {
             max-width: 600px;
             margin: 30px auto;
             background: #1e293b;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 0 25px rgba(0,0,0,0.4);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
         }
+
         .header {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             padding: 20px;
             text-align: center;
             color: #fff;
         }
+
         .header h1 {
             margin: 0;
             font-size: 24px;
             letter-spacing: 1px;
         }
+
         .content {
             padding: 25px;
             color: #e2e8f0;
         }
+
         .content h2 {
             color: #f87171;
             margin-top: 0;
         }
+
         .alert-box {
             background: rgba(239, 68, 68, 0.15);
             border-left: 5px solid #ef4444;
@@ -45,11 +52,13 @@
             border-radius: 8px;
             margin: 20px 0;
         }
+
         .info {
             margin-top: 20px;
             font-size: 14px;
             color: #94a3b8;
         }
+
         .footer {
             text-align: center;
             padding: 15px;
@@ -57,6 +66,7 @@
             color: #64748b;
             background: #020617;
         }
+
         .btn {
             display: inline-block;
             margin-top: 20px;
@@ -67,44 +77,97 @@
             border-radius: 6px;
             font-weight: bold;
         }
+
+        .action-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-container .btn {
+            margin-top: 0;
+        }
+
+        .emergency-coupon {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            border: 2px dashed #ef4444;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .emergency-coupon::before,
+        .emergency-coupon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 14px;
+            height: 14px;
+            background-color: #1e293b;
+            border-radius: 50%;
+            transform: translateY(-50%);
+        }
+
+        .emergency-coupon::before {
+            left: -8px;
+        }
+
+        .emergency-coupon::after {
+            right: -8px;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>🚨 LPG Gas Leakage Detection System</h1>
-    </div>
-
-    <div class="content">
-        <h2>Gas Leakage Detected!</h2>
-
-        <p>
-            An abnormal level of LPG gas has been detected by your monitoring system.
-            Immediate action is required to ensure safety.
-        </p>
-
-        <div class="alert-box">
-            ⚠️ <strong>Warning:</strong> Possible gas leakage detected. Avoid using electrical switches and ventilate the area immediately.
+    <div class="container">
+        <div class="header">
+            <h1>🚨 LPG Gas Leakage Detection System</h1>
         </div>
 
-        <p>
-            Please check your gas system and surroundings immediately to prevent any hazards.
-        </p>
+        <div class="content">
+            <h2>Gas Leakage Detected!</h2>
 
-        <a href="#" class="btn">View Dashboard</a>
+            <p>
+                An abnormal level of LPG gas has been detected by your monitoring system.
+                Immediate action is required to ensure safety.
+            </p>
 
-        <div class="info">
-            <p><strong>Time:</strong> {{ now|default:"Just Now" }}</p>
-            <p><strong>Status:</strong> Critical</p>
+            <div class="alert-box">
+                ⚠️ <strong>Warning:</strong> Possible gas leakage detected. Avoid using electrical switches and
+                ventilate the area immediately.
+            </div>
+
+            <p>
+                Please check your gas system and surroundings immediately to prevent any hazards.
+            </p>
+
+            <div class="action-container">
+                <a href="http://127.0.0.1:8000/" class="btn">🚨 View Dashboard</a>
+                <div class="emergency-coupon">
+                    CALL 911
+                </div>
+            </div>
+
+            <div class="info">
+                <p><strong>Time:</strong> {{ now|default:"Just Now" }}</p>
+                <p><strong>Status:</strong> Critical</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated alert from your Gas Monitoring System.</p>
+            <p>Do not reply to this email.</p>
         </div>
     </div>
-
-    <div class="footer">
-        <p>This is an automated alert from your Gas Monitoring System.</p>
-        <p>Do not reply to this email.</p>
-    </div>
-</div>
 
 </body>
+
 </html>
