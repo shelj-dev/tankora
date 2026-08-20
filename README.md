@@ -19,4 +19,4 @@ python manage.py runserver
 
 ## Circuit diagram
 
-[circuit diagram](tankora.png)
+![circuit diagram](tankora.png)
