@@ -16,3 +16,7 @@ sajeesh
 
 .venv/scripts/activate
 python manage.py runserver
+
+## Circuit diagram
+
+[circuit diagram](tankora.png)
